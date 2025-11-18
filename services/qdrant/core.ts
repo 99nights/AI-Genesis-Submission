@@ -47,46 +47,78 @@ const normalizeQdrantUrl = (raw?: string | null): string | null => {
   // Convert it to an absolute URL using the current origin
   if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
     // In browser environment, use window.location.origin
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.location && window.location.origin) {
       const origin = window.location.origin;
-      // Remove leading slash if present to avoid double slashes
+      // Ensure path starts with / and combine with origin
       const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
       trimmed = `${origin}${path}`;
+      console.log('[Qdrant Core] Converted relative URL to absolute:', raw, '->', trimmed);
     } else {
-      // In Node.js environment, this shouldn't happen, but fallback to localhost
-      console.warn('[Qdrant Core] Relative URL in non-browser environment, using localhost fallback');
-      trimmed = `http://localhost:8787${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}`;
+      // In Node.js environment or if window is not available yet, this shouldn't happen in production
+      // But we'll log a warning and try to use a fallback
+      console.warn('[Qdrant Core] Relative URL detected but window.location not available. Raw URL:', raw);
+      // For production builds, we should never hit this, but if we do, use the current host
+      if (typeof window !== 'undefined') {
+        // Try to get origin from window if available
+        try {
+          const origin = window.location?.origin || (window.location?.protocol && window.location?.host 
+            ? `${window.location.protocol}//${window.location.host}` 
+            : 'https://localhost');
+          const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+          trimmed = `${origin}${path}`;
+          console.log('[Qdrant Core] Fallback URL conversion:', raw, '->', trimmed);
+        } catch (e) {
+          console.error('[Qdrant Core] Failed to convert relative URL, using localhost fallback:', e);
+          trimmed = `http://localhost:8787${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}`;
+        }
+      } else {
+        // Node.js environment fallback
+        trimmed = `http://localhost:8787${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}`;
+      }
     }
   }
   
   return trimmed;
 };
 
-// Initialize Qdrant client
-const qdrantUrl = normalizeQdrantUrl(
-  process.env.QDRANT_URL || 
-  process.env.QDRANT_PROXY_URL || 
-  'http://localhost:8787/qdrant'
-);
+// Get the raw URL from environment
+const getRawQdrantUrl = (): string | null => {
+  return process.env.QDRANT_URL || 
+         process.env.QDRANT_PROXY_URL || 
+         'http://localhost:8787/qdrant';
+};
 
-// Validate URL format before creating client
-let qdrantClient: QdrantClient | null = null;
-if (qdrantUrl) {
-  try {
-    // Validate that the URL has a protocol
-    if (!qdrantUrl.startsWith('http://') && !qdrantUrl.startsWith('https://')) {
-      console.error('[Qdrant Core] Invalid Qdrant URL - must start with http:// or https://:', qdrantUrl);
-    } else {
-      // Validate URL format
-      new URL(qdrantUrl);
-      qdrantClient = new QdrantClient({ url: qdrantUrl });
-    }
-  } catch (error) {
-    console.error('[Qdrant Core] Failed to create Qdrant client - invalid URL:', qdrantUrl, error);
+// Initialize Qdrant client with proper URL resolution
+// Use a function to ensure window.location is available when called
+const initializeQdrantClient = (): QdrantClient | null => {
+  const rawUrl = getRawQdrantUrl();
+  const normalizedUrl = normalizeQdrantUrl(rawUrl);
+  
+  if (!normalizedUrl) {
+    console.error('[Qdrant Core] No Qdrant URL provided');
+    return null;
   }
-}
 
-export { qdrantClient };
+  // Validate that the URL has a protocol
+  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+    console.error('[Qdrant Core] Invalid Qdrant URL - must start with http:// or https://:', normalizedUrl);
+    return null;
+  }
+
+  try {
+    // Validate URL format
+    new URL(normalizedUrl);
+    console.log('[Qdrant Core] Initializing Qdrant client with URL:', normalizedUrl);
+    return new QdrantClient({ url: normalizedUrl });
+  } catch (error) {
+    console.error('[Qdrant Core] Failed to create Qdrant client - invalid URL:', normalizedUrl, error);
+    return null;
+  }
+};
+
+// Initialize the client - this will be called when the module loads
+// In browser, window.location should be available by the time this module is imported
+export const qdrantClient = initializeQdrantClient();
 
 // Active shop context (shared state)
 export let activeShopId: string | null = null;
