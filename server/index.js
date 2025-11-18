@@ -254,6 +254,15 @@ const forwardRequest = async (req, res) => {
   try {
     const upstreamPath = getUpstreamPath(req.originalUrl);
     const upstreamUrl = `${baseUrl}${upstreamPath}`;
+    
+    // Enhanced logging for debugging
+    if (shouldLogProxy) {
+      console.log(`[Qdrant Proxy] Forwarding: ${req.method} ${req.originalUrl}`);
+      console.log(`[Qdrant Proxy] Upstream path: ${upstreamPath}`);
+      console.log(`[Qdrant Proxy] Full upstream URL: ${upstreamUrl}`);
+      console.log(`[Qdrant Proxy] Base URL: ${baseUrl}`);
+    }
+    
     const headers = {
       'Content-Type': 'application/json',
       'api-key': upstreamApiKey,
@@ -327,8 +336,22 @@ const forwardRequest = async (req, res) => {
   }
 };
 
-// Qdrant proxy routes
-app.use('/qdrant', forwardRequest);
+// Qdrant proxy routes - must be before static file serving
+app.use('/qdrant', async (req, res, next) => {
+  // Log all incoming Qdrant proxy requests for debugging
+  if (shouldLogProxy) {
+    console.log(`[Qdrant Proxy] Incoming request: ${req.method} ${req.originalUrl} from ${req.ip}`);
+  }
+  // Call forwardRequest and handle any errors
+  try {
+    await forwardRequest(req, res);
+  } catch (error) {
+    console.error('[Qdrant Proxy] Unhandled error in proxy middleware:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Proxy error', details: error.message });
+    }
+  }
+});
 
 // Health check
 app.get('/healthz', (_req, res) => {

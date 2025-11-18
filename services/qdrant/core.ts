@@ -126,9 +126,34 @@ const initializeQdrantClient = (): QdrantClient | null => {
 
   try {
     // Validate URL format
-    new URL(normalizedUrl);
+    const urlObj = new URL(normalizedUrl);
     console.log('[Qdrant Core] Initializing Qdrant client with URL:', normalizedUrl);
-    _qdrantClient = new QdrantClient({ url: normalizedUrl });
+    console.log('[Qdrant Core] URL breakdown - protocol:', urlObj.protocol, 'host:', urlObj.host, 'pathname:', urlObj.pathname);
+    
+    // Ensure the URL ends with /qdrant for the proxy route
+    // The QdrantClient will append paths like /collections, so we need /qdrant as the base
+    let finalUrl = normalizedUrl;
+    if (!finalUrl.endsWith('/qdrant') && !finalUrl.endsWith('/qdrant/')) {
+      // If the path doesn't end with /qdrant, ensure it does
+      const url = new URL(normalizedUrl);
+      if (url.pathname === '/' || url.pathname === '') {
+        url.pathname = '/qdrant';
+      } else if (!url.pathname.endsWith('/qdrant')) {
+        url.pathname = url.pathname.replace(/\/$/, '') + '/qdrant';
+      }
+      finalUrl = url.toString();
+      console.log('[Qdrant Core] Adjusted URL to ensure /qdrant path:', finalUrl);
+    }
+    
+    // Create the client with the final URL
+    _qdrantClient = new QdrantClient({ url: finalUrl });
+    
+    // Verify the client was created successfully and log the actual URL it's using
+    // The QdrantClient library stores the URL internally, so we can't directly access it
+    // But we can test it by making a simple request
+    console.log('[Qdrant Core] QdrantClient created successfully with URL:', finalUrl);
+    console.log('[Qdrant Core] Client will make requests to:', finalUrl + '/collections (example)');
+    
     return _qdrantClient;
   } catch (error) {
     console.error('[Qdrant Core] Failed to create Qdrant client - invalid URL:', normalizedUrl, error);
