@@ -385,6 +385,10 @@ export {
 // Re-export all inventory functions
 export {
   searchRelevantInventoryItems,
+  persistInventoryEntry,
+  updateInventoryWithOCR,
+  deleteInventoryEntry,
+  createInventoryFromBatch,
 };
 
 // Re-export all sales functions

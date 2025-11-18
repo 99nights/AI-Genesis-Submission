@@ -33,10 +33,9 @@ if (!upstreamBase || !upstreamApiKey) {
 
 // Validate that QDRANT_UPSTREAM_URL is not localhost (Railway blocks localhost connections)
 const urlLower = upstreamBase.toLowerCase();
-if (urlLower.includes('localhost') || urlLower.includes('127.0.0.1') || urlLower.includes(':6333')) {
-  console.error('ERROR: QDRANT_UPSTREAM_URL cannot be localhost or use port 6333. Railway blocks localhost connections.');
+if (urlLower.includes('localhost') || urlLower.includes('127.0.0.1') || urlLower.startsWith('http://localhost') || urlLower.startsWith('http://127.0.0.1')) {
+  console.error('ERROR: QDRANT_UPSTREAM_URL cannot be localhost. Railway blocks localhost connections.');
   console.error('Please use your Qdrant Cloud URL (e.g., https://your-cluster.qdrant.io)');
-  console.error('Current QDRANT_UPSTREAM_URL:', upstreamBase);
   process.exit(1);
 }
 
@@ -44,26 +43,12 @@ const sanitizeBase = (url) => url.endsWith('/') ? url.slice(0, -1) : url;
 const baseUrl = sanitizeBase(upstreamBase);
 
 // Validate URL format
-let validatedUrl;
 try {
-  validatedUrl = new URL(baseUrl);
+  new URL(baseUrl);
 } catch (error) {
   console.error('ERROR: QDRANT_UPSTREAM_URL is not a valid URL:', baseUrl);
   process.exit(1);
 }
-
-// Log the URL being used to ensure transparency
-console.log('[Qdrant Proxy] Using QDRANT_UPSTREAM_URL:', baseUrl);
-console.log('[Qdrant Proxy] URL Protocol:', validatedUrl.protocol);
-console.log('[Qdrant Proxy] URL Host:', validatedUrl.host);
-
-// CRITICAL: Ensure we're using the environment variable URL, never hardcoded localhost
-if (validatedUrl.hostname === 'localhost' || validatedUrl.hostname === '127.0.0.1' || validatedUrl.port === '6333') {
-  console.error('ERROR: QDRANT_UPSTREAM_URL resolves to localhost or port 6333:', baseUrl);
-  console.error('This will not work in production. Please set QDRANT_UPSTREAM_URL to your Qdrant Cloud URL.');
-  process.exit(1);
-}
-
 const qdrantClient = new QdrantClient({
   url: baseUrl,
   apiKey: upstreamApiKey,
@@ -268,28 +253,14 @@ const createFetchWithTimeout = (url, options, timeoutMs = 30000) => {
 const forwardRequest = async (req, res) => {
   try {
     const upstreamPath = getUpstreamPath(req.originalUrl);
-    // CRITICAL: Always use baseUrl from QDRANT_UPSTREAM_URL environment variable
-    // Never use localhost:6333 or any hardcoded URL
     const upstreamUrl = `${baseUrl}${upstreamPath}`;
-    
-    // Safety check - ensure we're not accidentally using localhost
-    if (upstreamUrl.includes('localhost') || upstreamUrl.includes('127.0.0.1') || upstreamUrl.includes(':6333')) {
-      console.error('[Qdrant Proxy] CRITICAL ERROR: Attempted to forward to localhost or port 6333:', upstreamUrl);
-      console.error('[Qdrant Proxy] baseUrl should come from QDRANT_UPSTREAM_URL:', baseUrl);
-      res.status(500).json({ 
-        error: 'Configuration Error', 
-        details: 'Server is configured to forward to localhost. Please set QDRANT_UPSTREAM_URL to a valid Qdrant Cloud URL.',
-        attemptedUrl: upstreamUrl
-      });
-      return;
-    }
     
     // Enhanced logging for debugging
     if (shouldLogProxy) {
       console.log(`[Qdrant Proxy] Forwarding: ${req.method} ${req.originalUrl}`);
       console.log(`[Qdrant Proxy] Upstream path: ${upstreamPath}`);
       console.log(`[Qdrant Proxy] Full upstream URL: ${upstreamUrl}`);
-      console.log(`[Qdrant Proxy] Base URL (from QDRANT_UPSTREAM_URL): ${baseUrl}`);
+      console.log(`[Qdrant Proxy] Base URL: ${baseUrl}`);
     }
     
     const headers = {

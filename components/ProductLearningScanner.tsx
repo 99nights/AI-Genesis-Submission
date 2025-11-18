@@ -2,7 +2,10 @@
 
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { fieldMetadata, ScannedItemData, analyzeImageForInventory, analyzeCroppedImageForField } from '../services/geminiService';
-import { createCanonicalProduct, addImageForField } from '../services/vectorDBService';
+import { createCanonicalProduct, addImageForField, persistInventoryEntry } from '../services/vectorDBService';
+import { activeShopId } from '../services/qdrant/core';
+import { v4 as uuidv4 } from 'uuid';
+import type { StockItem, ScanMetadata } from '../types';
 import { LockIcon } from './icons/LockIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 
@@ -194,9 +197,17 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
         setMode('scanning');
         return;
     }
+    
+    if (!activeShopId) {
+        setError('No shop selected. Please select a shop before saving.');
+        setMode('scanning');
+        return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
     try {
+        // Create the canonical product in the products collection
         const newProduct = await createCanonicalProduct({
             name: currentScannedData.productName,
             manufacturer: currentScannedData.manufacturer,
@@ -205,10 +216,68 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
             description: currentScannedData.productDescription || '', 
         });
 
+        // Add images for product fields (for OCR learning)
         const imagePromises = Array.from(capturedBlobs.entries()).map(([field, blob]) => 
             addImageForField(newProduct.name, field, blob, { productId: newProduct.id, source: 'manual' })
         );
         await Promise.all(imagePromises);
+        
+        // CRITICAL: Create an inventory item in the items collection
+        // This links the discovered product to actual inventory
+        const now = new Date().toISOString();
+        const inventoryUuid = uuidv4();
+        
+        // Build scan metadata from captured fields
+        const scanMetadata: ScanMetadata = {
+            ocrText: currentScannedData.productName || '',
+            confidence: 1.0,
+            sourcePhotoId: inventoryUuid,
+            fieldCaptures: Array.from(capturedBlobs.keys()).map(field => ({
+                field: String(field),
+                captureId: uuidv4(),
+                source: 'manual' as const,
+                capturedAt: now,
+                confidence: 0.9,
+            })),
+        };
+        
+        // Extract images from captured blobs for the inventory item
+        const productImages = Array.from(capturedBlobs.entries()).map(([field, blob]) => {
+            // Note: In a real implementation, these would be uploaded to storage
+            // For now, we'll use placeholder URLs or store the metadata
+            return {
+                url: '', // Will be populated when images are uploaded to storage
+                type: 'manual' as const,
+                source: String(field),
+                addedAt: now,
+            };
+        });
+        
+        // Create the inventory item (StockItem)
+        const inventoryItem: StockItem = {
+            id: Date.now(), // Legacy numeric ID
+            inventoryUuid,
+            shopId: activeShopId,
+            productId: newProduct.id,
+            batchId: '', // No batch for scanned items
+            expirationDate: currentScannedData.expirationDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // Default 1 year if not provided
+            quantity: currentScannedData.quantity || 1, // Default to 1 item when scanning
+            costPerUnit: currentScannedData.buyPrice || 0,
+            buyPrice: currentScannedData.buyPrice,
+            sellPrice: currentScannedData.sellPrice || (currentScannedData.buyPrice ? currentScannedData.buyPrice * 1.4 : undefined),
+            location: currentScannedData.location,
+            images: productImages.length > 0 ? productImages : undefined,
+            scanMetadata,
+            qdrantId: inventoryUuid,
+            status: 'ACTIVE',
+            createdByUserId: activeShopId,
+            createdAt: now,
+            updatedAt: now,
+            shareScope: ['local'],
+        };
+        
+        // Persist the inventory item to Qdrant items collection
+        await persistInventoryEntry(inventoryItem, scanMetadata);
         
         onProductCreated();
         onClose();
