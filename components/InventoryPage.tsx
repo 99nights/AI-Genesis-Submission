@@ -25,7 +25,7 @@ interface InventoryPageProps {
 }
 
 type ViewMode = 'grid' | 'table';
-type InventoryMode = 'overview' | 'scan' | 'manual';
+type InventoryMode = 'overview' | 'manual';
 
 const InventoryPage: React.FC<InventoryPageProps> = ({ 
   summaries, 
@@ -40,7 +40,6 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   const [isLiveScanning, setIsLiveScanning] = useState(false);
   const [visualSearchResults, setVisualSearchResults] = useState<StockItem[] | null>(null);
   const [isVisualSearching, setIsVisualSearching] = useState(false);
-  const visualSearchInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [editForm, setEditForm] = useState<InventoryEditPayload>({});
@@ -86,7 +85,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
     // Store the scan result and switch to manual mode
     setPendingScanResult(result);
     setInventoryMode('manual');
-    showToast('Scan complete! Review the extracted data in the form below and click "Add Item to Batch" when ready.', 'success');
+    showToast('Scan complete! Please verify and edit the pre-populated data in the form below before adding to inventory.', 'success');
   }, [showToast]);
 
   const handleBatchAdded = useCallback(() => {
@@ -254,16 +253,6 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
                 Overview
               </button>
               <button
-                onClick={() => setInventoryMode('scan')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition ${
-                  inventoryMode === 'scan'
-                    ? 'bg-cyan-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                Scan Item
-              </button>
-              <button
                 onClick={() => setInventoryMode('manual')}
                 className={`px-4 py-2 rounded-md text-sm font-semibold transition ${
                   inventoryMode === 'manual'
@@ -333,10 +322,10 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
                     className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <CameraIcon className="w-6 h-6" />
-                    {isVisualSearching ? 'Searching...' : 'Visual Search (Live)'}
+                    {isVisualSearching ? 'Searching...' : 'Live Imagery Search'}
                   </button>
                   <p className="text-xs text-gray-400 text-center px-2">
-                    Use camera to search if item is in inventory
+                    Use your camera to search inventory by image
                   </p>
                   
                   <button
@@ -425,28 +414,6 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
                   onDeleteRequest={openInventoryDelete}
                 />
               )}
-            </div>
-          </div>
-        )}
-
-        {inventoryMode === 'scan' && (
-          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6">
-            <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-white">Live Scan Item</h2>
-              <p className="text-gray-400">
-                Use your camera to automatically extract product information. 
-                You can also draw rectangles on the screen to focus on specific areas.
-              </p>
-              <button
-                onClick={() => setIsLiveScanning(true)}
-                className="mx-auto flex items-center justify-center gap-3 py-4 px-8 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 transition-all"
-              >
-                <CameraIcon className="w-8 h-8" />
-                Start Live Scan
-              </button>
-              <p className="text-sm text-gray-500 mt-4">
-                After scanning, you'll be able to review and complete the form with the extracted data.
-              </p>
             </div>
           </div>
         )}
