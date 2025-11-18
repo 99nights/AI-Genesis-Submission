@@ -35,24 +35,62 @@ export const VECTOR_CONFIG = {
   distance: 'Cosine' as const,
 } as const;
 
-// Normalize Qdrant URL
+// Normalize Qdrant URL - convert relative URLs to absolute at runtime
 const normalizeQdrantUrl = (raw?: string | null): string | null => {
   if (!raw) return null;
   let trimmed = raw.trim();
   while (trimmed.endsWith('/')) {
     trimmed = trimmed.slice(0, -1);
   }
+  
+  // If URL doesn't have a protocol, it's relative - convert to absolute
+  // This happens in production when vite.config.ts sets QDRANT_URL to '/qdrant'
+  if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    // In browser, use window.location.origin to get the full URL
+    if (typeof window !== 'undefined' && window.location) {
+      const origin = window.location.origin;
+      const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+      trimmed = `${origin}${path}`;
+      console.log('[Qdrant Core] Converted relative URL to absolute:', raw, '->', trimmed);
+    } else {
+      // Should not happen in browser, but fallback for safety
+      console.warn('[Qdrant Core] Relative URL in non-browser context, using localhost fallback');
+      trimmed = `http://localhost:8787${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}`;
+    }
+  }
+  
   return trimmed;
 };
 
-// Initialize Qdrant client
-const qdrantUrl = normalizeQdrantUrl(
-  process.env.QDRANT_URL || 
-  process.env.QDRANT_PROXY_URL || 
-  'http://localhost:8787/qdrant'
-);
+// Get the raw URL from environment (baked in at build time for production)
+const getRawQdrantUrl = (): string | null => {
+  return process.env.QDRANT_URL || 
+         process.env.QDRANT_PROXY_URL || 
+         'http://localhost:8787/qdrant';
+};
 
-export const qdrantClient = qdrantUrl ? new QdrantClient({ url: qdrantUrl }) : null;
+// Initialize Qdrant client with runtime URL resolution
+const qdrantUrl = normalizeQdrantUrl(getRawQdrantUrl());
+
+// Validate and create client
+let qdrantClient: QdrantClient | null = null;
+if (qdrantUrl) {
+  // Final validation - ensure URL has protocol
+  if (!qdrantUrl.startsWith('http://') && !qdrantUrl.startsWith('https://')) {
+    console.error('[Qdrant Core] Invalid Qdrant URL - missing protocol:', qdrantUrl);
+  } else {
+    try {
+      // Validate URL format
+      new URL(qdrantUrl);
+      qdrantClient = new QdrantClient({ url: qdrantUrl });
+      console.log('[Qdrant Core] Qdrant client initialized with URL:', qdrantUrl);
+    } catch (error) {
+      console.error('[Qdrant Core] Failed to create Qdrant client:', error);
+    }
+  }
+}
+
+export { qdrantClient };
 
 // Active shop context (shared state)
 export let activeShopId: string | null = null;
