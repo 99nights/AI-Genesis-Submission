@@ -254,6 +254,7 @@ const App: React.FC = () => {
             summaries={hasShopRole ? productSummaries : []} 
             onNavigateToInventory={() => hasShopRole && handleTabChange('inventory')} 
             onRefreshData={currentUser ? () => refreshData(currentUser) : undefined}
+            isActive={true}
           />
         )}
         

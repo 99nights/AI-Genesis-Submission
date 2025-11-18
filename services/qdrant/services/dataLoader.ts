@@ -6,6 +6,7 @@
 
 import { activeShopId } from '../core';
 import { fetchAllPoints } from '../queries';
+import { getCanonicalProductsForShop } from './products';
 import { db, clearAllCaches } from './helpers';
 import type { Product, Batch, StockItem, SaleTransaction, MarketplaceListing } from '../../../types';
 
@@ -36,16 +37,33 @@ export const loadDataFromQdrant = async (): Promise<void> => {
 
   console.log(`[DataLoader] Loading data for shopId: ${shopIdString}`);
 
-  const [supplierPoints, productPoints, batchPoints, itemPoints, salePoints, marketplacePoints] = await Promise.all([
+  // Get items first to determine which products we need
+  const itemPoints = await fetchAllPoints('items', shopIdString);
+  
+  // Extract unique productIds from items - we only need products that this shop has
+  const productIds = new Set<string>();
+  for (const point of itemPoints) {
+    const payload = point.payload as any;
+    const productId = payload?.productId;
+    if (productId && typeof productId === 'string') {
+      productIds.add(productId);
+    }
+  }
+
+  // Load only shop-specific data (not all products globally - major performance optimization)
+  const [supplierPoints, batchPoints, salePoints, marketplacePoints] = await Promise.all([
     fetchAllPoints('suppliers', shopIdString),
-    fetchAllPoints('products', null),
     fetchAllPoints('batches', shopIdString),
-    fetchAllPoints('items', shopIdString),
     fetchAllPoints('sales', shopIdString),
     fetchAllPoints('marketplace', shopIdString),
   ]);
 
-  console.log(`[DataLoader] Fetched from Qdrant: ${itemPoints.length} items, ${productPoints.length} products, ${batchPoints.length} batches`);
+  // Get only products that this shop has (instead of ALL products)
+  const shopProducts = productIds.size > 0 
+    ? await getCanonicalProductsForShop(shopIdString)
+    : [];
+
+  console.log(`[DataLoader] Fetched from Qdrant: ${itemPoints.length} items, ${shopProducts.length} products (shop-specific), ${batchPoints.length} batches`);
 
   // If no items found, check what shopIds actually exist in Qdrant
   if (itemPoints.length === 0) {
@@ -78,16 +96,13 @@ export const loadDataFromQdrant = async (): Promise<void> => {
 
   clearAllCaches();
 
-  // Load products
-  productPoints.forEach(point => {
-    const payload = point.payload as any;
-    const productId = payload?.productId || String(point.id);
-    if (!productId) return;
-    db.products.set(productId, {
-      id: productId,
-      name: payload?.name || 'Unnamed Product',
-      manufacturer: payload?.manufacturer || '',
-      category: payload?.category || '',
+  // Load products (only shop-specific products, not all products)
+  shopProducts.forEach(product => {
+    db.products.set(product.id, {
+      id: product.id,
+      name: product.name || 'Unnamed Product',
+      manufacturer: product.manufacturer || '',
+      category: product.category || '',
     });
   });
 

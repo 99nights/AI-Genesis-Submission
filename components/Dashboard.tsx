@@ -14,38 +14,67 @@ interface DashboardProps {
     summaries: ProductSummary[];
     onNavigateToInventory: () => void;
     onRefreshData?: () => Promise<void> | void;
+    isActive?: boolean; // Only load heavy data when Dashboard tab is active
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory, onRefreshData }) => {
+const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory, onRefreshData, isActive = true }) => {
     const [isCreatingTestData, setIsCreatingTestData] = useState(false);
     const [inventoryItems, setInventoryItems] = useState<StockItem[]>([]);
     const [salesHistory, setSalesHistory] = useState<SaleTransaction[]>([]);
+    const [isLoadingInsights, setIsLoadingInsights] = useState(false);
     const { showToast } = useToast();
 
-    // Load inventory items and sales for visual insights
+    // Lazy load inventory items and sales only when Dashboard is active (performance optimization)
+    // This avoids loading heavy data on initial app load when user hasn't navigated to Dashboard yet
     useEffect(() => {
+        if (!isActive) {
+            // Clear data when Dashboard is not active to save memory
+            setInventoryItems([]);
+            setSalesHistory([]);
+            return;
+        }
+
+        let cancelled = false;
+        setIsLoadingInsights(true);
+
         const loadData = async () => {
             try {
-                const items = await getAllStockItems();
+                // Load data in parallel for better performance
+                const [items, shopId] = await Promise.all([
+                    getAllStockItems(),
+                    import('../services/vectorDBService').then(m => m.getActiveShopId())
+                ]);
+                
+                if (cancelled) return;
+                
                 setInventoryItems(items);
                 
                 // Try to load sales if available
-                try {
-                    const { getActiveShopId } = await import('../services/vectorDBService');
-                    const shopId = getActiveShopId();
-                    if (shopId) {
+                if (shopId) {
+                    try {
                         const sales = await getAllSales(shopId);
-                        setSalesHistory(sales);
+                        if (!cancelled) {
+                            setSalesHistory(sales);
+                        }
+                    } catch (err) {
+                        console.warn('Could not load sales history:', err);
                     }
-                } catch (err) {
-                    console.warn('Could not load sales history:', err);
                 }
             } catch (err) {
                 console.error('Error loading inventory data:', err);
+            } finally {
+                if (!cancelled) {
+                    setIsLoadingInsights(false);
+                }
             }
         };
+        
         loadData();
-    }, [summaries]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [summaries, isActive]); // Depend on isActive to reload when tab becomes active
 
     const handleCreateTestData = async () => {
         if (!confirm('This will create sample products, suppliers, batches, and inventory items. Continue?')) {
@@ -271,6 +300,18 @@ const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory,
     };
 
     const kpis = useMemo(() => {
+        // Show loading state if summaries are empty and we're still loading
+        if (summaries.length === 0 && isLoadingInsights) {
+            return {
+                totalValue: 0,
+                uniqueProducts: 0,
+                expiringSoon: 0,
+                expired: 0,
+                expiringSoonList: [],
+                expiredList: []
+            };
+        }
+
         // Calculate real inventory value using averageCostPerUnit from summaries
         const totalValue = summaries.reduce((acc, summary) => {
             // Use actual averageCostPerUnit if available, otherwise fallback to 0
@@ -307,7 +348,7 @@ const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory,
             expiringSoonList,
             expiredList
         };
-    }, [summaries]);
+    }, [summaries, isLoadingInsights]);
 
     return (
         <div className="space-y-8">
@@ -317,38 +358,54 @@ const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory,
             </div>
             
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
-                    <div className="p-3 bg-cyan-900/50 rounded-lg">
-                        <ValueIcon className="w-8 h-8 text-cyan-400" />
+            {isLoadingInsights && summaries.length === 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[1, 2, 3].map(i => (
+                        <div key={i} className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
+                            <div className="p-3 bg-gray-700/50 rounded-lg animate-pulse">
+                                <div className="w-8 h-8 bg-gray-600 rounded" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="h-4 bg-gray-700 rounded w-24 mb-2 animate-pulse" />
+                                <div className="h-8 bg-gray-700 rounded w-32 animate-pulse" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
+                        <div className="p-3 bg-cyan-900/50 rounded-lg">
+                            <ValueIcon className="w-8 h-8 text-cyan-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-400">Total Inventory Value</p>
+                            <p className="text-2xl font-bold text-white">${kpis.totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-400">Total Inventory Value</p>
-                        <p className="text-2xl font-bold text-white">${kpis.totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                    <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
+                         <div className="p-3 bg-cyan-900/50 rounded-lg">
+                            <ItemsIcon className="w-8 h-8 text-cyan-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-400">Unique Products</p>
+                            <p className="text-2xl font-bold text-white">{kpis.uniqueProducts}</p>
+                        </div>
+                    </div>
+                    <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
+                         <div className="p-3 bg-red-900/50 rounded-lg">
+                            <ExpirationIcon className="w-8 h-8 text-red-400" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-400">Expiring in 30 Days</p>
+                            <p className="text-2xl font-bold text-white">{kpis.expiringSoon} items</p>
+                            {kpis.expired > 0 && (
+                                <p className="text-xs text-red-400 mt-1">{kpis.expired} expired</p>
+                            )}
+                        </div>
                     </div>
                 </div>
-                <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
-                     <div className="p-3 bg-cyan-900/50 rounded-lg">
-                        <ItemsIcon className="w-8 h-8 text-cyan-400" />
-                    </div>
-                    <div>
-                        <p className="text-sm font-medium text-gray-400">Unique Products</p>
-                        <p className="text-2xl font-bold text-white">{kpis.uniqueProducts}</p>
-                    </div>
-                </div>
-                <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
-                     <div className="p-3 bg-red-900/50 rounded-lg">
-                        <ExpirationIcon className="w-8 h-8 text-red-400" />
-                    </div>
-                    <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-400">Expiring in 30 Days</p>
-                        <p className="text-2xl font-bold text-white">{kpis.expiringSoon} items</p>
-                        {kpis.expired > 0 && (
-                            <p className="text-xs text-red-400 mt-1">{kpis.expired} expired</p>
-                        )}
-                    </div>
-                </div>
-            </div>
+            )}
 
             {/* Expiration Alerts */}
             {(kpis.expired > 0 || kpis.expiringSoon > 0) && (
