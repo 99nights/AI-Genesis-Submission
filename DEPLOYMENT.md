@@ -41,6 +41,7 @@ In Railway, go to your project → **Variables** tab and add the following:
 
 ```bash
 # Qdrant Configuration
+# ⚠️ IMPORTANT: Use Qdrant Cloud URL (NOT localhost - Railway blocks localhost connections)
 QDRANT_UPSTREAM_URL=https://your-cluster.qdrant.io
 QDRANT_API_KEY=your-qdrant-api-key
 QDRANT_PRODUCTS_COLLECTION=products
@@ -137,6 +138,40 @@ After your first deployment, you may need to initialize Qdrant collections. You 
 - Ensure `NODE_ENV=production` is set
 - Verify the build completed successfully
 - Check that `dist/` folder exists after build
+
+### Qdrant Connection Issues / Proxy Blocking
+**Railway blocks localhost connections** - this is a common issue. The proxy will automatically detect and prevent this.
+
+**Symptoms:**
+- Errors like "Cannot connect to Qdrant API" or "Bad Gateway"
+- Connection timeouts
+- Proxy request failures
+
+**Solutions:**
+1. **Verify QDRANT_UPSTREAM_URL is NOT localhost:**
+   - ❌ `http://localhost:6333`
+   - ❌ `http://127.0.0.1:6333`
+   - ✅ `https://your-cluster.qdrant.io` (Qdrant Cloud URL)
+
+2. **Use Qdrant Cloud (Recommended):**
+   - Sign up at [cloud.qdrant.io](https://cloud.qdrant.io)
+   - Create a cluster and get the HTTPS URL
+   - Use this URL in `QDRANT_UPSTREAM_URL`
+
+3. **Check Railway Logs:**
+   - Look for connection test messages on startup
+   - Check for "Connection timeout" or "ENOTFOUND" errors
+   - The server now tests connectivity on startup and logs the result
+
+4. **Network Configuration:**
+   - Railway allows outbound HTTPS connections by default
+   - No special firewall rules needed for Qdrant Cloud
+   - Ensure your Qdrant Cloud cluster is publicly accessible
+
+5. **Timeout Issues:**
+   - The proxy now has a 30-second timeout for requests
+   - If you see timeout errors, check Qdrant Cloud cluster status
+   - Large vector operations may take longer - consider increasing timeout if needed
 
 ### API Errors
 - Verify Qdrant URL and API key

@@ -31,8 +31,24 @@ if (!upstreamBase || !upstreamApiKey) {
   process.exit(1);
 }
 
+// Validate that QDRANT_UPSTREAM_URL is not localhost (Railway blocks localhost connections)
+const urlLower = upstreamBase.toLowerCase();
+if (urlLower.includes('localhost') || urlLower.includes('127.0.0.1') || urlLower.startsWith('http://localhost') || urlLower.startsWith('http://127.0.0.1')) {
+  console.error('ERROR: QDRANT_UPSTREAM_URL cannot be localhost. Railway blocks localhost connections.');
+  console.error('Please use your Qdrant Cloud URL (e.g., https://your-cluster.qdrant.io)');
+  process.exit(1);
+}
+
 const sanitizeBase = (url) => url.endsWith('/') ? url.slice(0, -1) : url;
 const baseUrl = sanitizeBase(upstreamBase);
+
+// Validate URL format
+try {
+  new URL(baseUrl);
+} catch (error) {
+  console.error('ERROR: QDRANT_UPSTREAM_URL is not a valid URL:', baseUrl);
+  process.exit(1);
+}
 const qdrantClient = new QdrantClient({
   url: baseUrl,
   apiKey: upstreamApiKey,
@@ -221,6 +237,19 @@ const getUpstreamPath = (url) => {
   return url;
 };
 
+// Create AbortController for timeout handling
+const createFetchWithTimeout = (url, options, timeoutMs = 30000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  return fetch(url, {
+    ...options,
+    signal: controller.signal,
+  }).finally(() => {
+    clearTimeout(timeoutId);
+  });
+};
+
 const forwardRequest = async (req, res) => {
   try {
     const upstreamPath = getUpstreamPath(req.originalUrl);
@@ -228,6 +257,7 @@ const forwardRequest = async (req, res) => {
     const headers = {
       'Content-Type': 'application/json',
       'api-key': upstreamApiKey,
+      'User-Agent': 'Qdrant-Proxy/1.0',
     };
 
     const init = {
@@ -247,7 +277,8 @@ const forwardRequest = async (req, res) => {
       }
     }
 
-    const response = await fetch(upstreamUrl, init);
+    // Use timeout wrapper for Railway networking
+    const response = await createFetchWithTimeout(upstreamUrl, init, 30000);
     const text = await response.text();
 
     if (shouldLogProxy) {
@@ -263,8 +294,36 @@ const forwardRequest = async (req, res) => {
     res.set('Content-Type', response.headers.get('content-type') || 'application/json');
     res.send(text);
   } catch (error) {
-    console.error('[Qdrant Proxy] Error forwarding request:', error);
-    res.status(500).json({ error: 'Proxy request failed', details: error.message });
+    // Enhanced error logging for Railway debugging
+    const errorDetails = {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      upstreamUrl: baseUrl,
+    };
+    
+    if (error.name === 'AbortError') {
+      console.error('[Qdrant Proxy] Request timeout (30s) to Qdrant:', upstreamUrl);
+      res.status(504).json({ 
+        error: 'Gateway Timeout', 
+        details: 'Request to Qdrant API timed out after 30 seconds',
+        upstreamUrl: baseUrl,
+      });
+    } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+      console.error('[Qdrant Proxy] Connection failed to Qdrant:', errorDetails);
+      res.status(502).json({ 
+        error: 'Bad Gateway', 
+        details: `Cannot connect to Qdrant API at ${baseUrl}. Check QDRANT_UPSTREAM_URL environment variable.`,
+        hint: 'Ensure QDRANT_UPSTREAM_URL points to a valid Qdrant Cloud URL (not localhost)',
+      });
+    } else {
+      console.error('[Qdrant Proxy] Error forwarding request:', errorDetails);
+      res.status(500).json({ 
+        error: 'Proxy request failed', 
+        details: error.message,
+        upstreamUrl: baseUrl,
+      });
+    }
   }
 };
 
@@ -296,12 +355,52 @@ if (NODE_ENV === 'production') {
   });
 }
 
-app.listen(PORT, () => {
+// Test Qdrant connectivity on startup
+const testQdrantConnection = async () => {
+  try {
+    console.log(`[Qdrant Proxy] Testing connection to ${baseUrl}...`);
+    const testUrl = `${baseUrl}/collections`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'api-key': upstreamApiKey,
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
+    
+    if (response.ok || response.status === 401) {
+      // 401 is OK - it means we can reach the server, just auth might be wrong
+      console.log(`[Qdrant Proxy] ✓ Successfully connected to Qdrant at ${baseUrl}`);
+    } else {
+      console.warn(`[Qdrant Proxy] ⚠ Connection test returned status ${response.status}`);
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error(`[Qdrant Proxy] ✗ Connection timeout to ${baseUrl}`);
+      console.error('[Qdrant Proxy] This may indicate a network issue or incorrect QDRANT_UPSTREAM_URL');
+    } else {
+      console.error(`[Qdrant Proxy] ✗ Failed to connect to ${baseUrl}:`, error.message);
+      console.error('[Qdrant Proxy] Please verify QDRANT_UPSTREAM_URL is correct and accessible from Railway');
+    }
+    // Don't exit - let the server start and log errors on actual requests
+  }
+};
+
+app.listen(PORT, async () => {
   console.log(`[Server] Listening on port ${PORT}`);
   console.log(`[Server] Environment: ${NODE_ENV}`);
   if (NODE_ENV === 'production') {
     console.log(`[Server] Serving static files from dist/`);
   }
   console.log(`[Qdrant Proxy] Forwarding to ${baseUrl}`);
+  
+  // Test connection in background (don't block startup)
+  testQdrantConnection().catch(() => {
+    // Errors already logged in testQdrantConnection
+  });
 });
 
