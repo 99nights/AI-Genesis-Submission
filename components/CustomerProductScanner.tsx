@@ -11,6 +11,7 @@ interface CustomerProductScannerProps {
 const CustomerProductScanner: React.FC<CustomerProductScannerProps> = ({ products, onClose, onMatch }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Align the product and tap capture to search.');
@@ -18,11 +19,21 @@ const CustomerProductScanner: React.FC<CustomerProductScannerProps> = ({ product
   const productMap = useMemo(() => new Map(products.map(p => [p.name, p])), [products]);
   const productNames = useMemo(() => products.map(p => p.name), [products]);
 
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
+
   useEffect(() => {
-    let stream: MediaStream | null = null;
     const startCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
@@ -33,9 +44,7 @@ const CustomerProductScanner: React.FC<CustomerProductScannerProps> = ({ product
     };
     startCamera();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
   }, []);
 
@@ -59,6 +68,7 @@ const CustomerProductScanner: React.FC<CustomerProductScannerProps> = ({ product
       if (matchName) {
         const product = productMap.get(matchName) || null;
         setStatusMessage(product ? `Matched ${product.name}` : 'No matching product found.');
+        stopCamera();
         onMatch(product);
         onClose();
       } else {
@@ -77,7 +87,10 @@ const CustomerProductScanner: React.FC<CustomerProductScannerProps> = ({ product
       <div className="bg-gray-900 rounded-xl border border-gray-700 w-full max-w-xl overflow-hidden">
         <div className="flex justify-between items-center p-4 border-b border-gray-800">
           <h2 className="text-white text-lg font-semibold">Scan Product</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-2xl leading-5" aria-label="Close scanner">&times;</button>
+          <button onClick={() => {
+            stopCamera();
+            onClose();
+          }} className="text-gray-400 hover:text-white text-2xl leading-5" aria-label="Close scanner">&times;</button>
         </div>
         <div className="p-4 space-y-4">
           {error && <p className="text-sm text-red-400 bg-red-900/20 p-2 rounded">{error}</p>}

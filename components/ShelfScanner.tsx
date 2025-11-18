@@ -21,6 +21,7 @@ type ScanStatus = 'idle' | 'scanning' | 'processing' | 'results' | 'updating';
 const ShelfScanner: React.FC<ShelfScannerProps> = ({ summaries, onScanComplete, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<ShelfScanResult | null>(null);
@@ -32,23 +33,32 @@ const ShelfScanner: React.FC<ShelfScannerProps> = ({ summaries, onScanComplete, 
   const productNames = summaries.map(s => s.productName);
   const productLookup = new Map(summaries.map(s => [s.productName.toLowerCase(), s]));
 
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  };
+
   // Initialize camera
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    
     const startCamera = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setError("Camera not supported. Please use a modern browser on HTTPS.");
         return;
       }
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
+        const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
             width: { ideal: 1920 },
             height: { ideal: 1080 }
           } 
         });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -60,9 +70,7 @@ const ShelfScanner: React.FC<ShelfScannerProps> = ({ summaries, onScanComplete, 
     startCamera();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
   }, []);
 
@@ -210,10 +218,12 @@ const ShelfScanner: React.FC<ShelfScannerProps> = ({ summaries, onScanComplete, 
       successCount > 0 ? 'success' : 'error'
     );
 
+    // Stop camera before completing scan
+    stopCamera();
     if (onScanComplete) {
       onScanComplete();
     }
-  }, [scanResult, productLookup, updateInventoryForProduct, onScanComplete, showToast]);
+  }, [scanResult, productLookup, updateInventoryForProduct, onScanComplete, showToast, stopCamera]);
 
   const getExpirationStatus = (expDate?: string): 'expired' | 'expiring-soon' | 'ok' => {
     if (!expDate) return 'ok';
@@ -534,7 +544,10 @@ const ShelfScanner: React.FC<ShelfScannerProps> = ({ summaries, onScanComplete, 
       )}
 
       <button
-        onClick={onClose}
+        onClick={() => {
+          stopCamera();
+          onClose();
+        }}
         className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-30"
         aria-label="Close scanner"
       >

@@ -21,6 +21,7 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const scanIntervalRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const [mode, setMode] = useState<Mode>('scanning');
   const [error, setError] = useState<string | null>(null);
@@ -52,11 +53,21 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
     }
   }, []);
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
   useEffect(() => {
-    let stream: MediaStream | null = null;
     const startCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => handleResize();
@@ -70,9 +81,9 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
     return () => {
       window.removeEventListener('resize', handleResize);
       clearScanInterval();
-      stream?.getTracks().forEach(track => track.stop());
+      stopCamera();
     };
-  }, [handleResize, clearScanInterval]);
+  }, [handleResize, clearScanInterval, stopCamera]);
 
   const performAutoScan = useCallback(async () => {
     if (!videoRef.current || !captureCanvasRef.current || document.hidden || mode !== 'scanning') return;
@@ -279,6 +290,8 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
         // Persist the inventory item to Qdrant items collection
         await persistInventoryEntry(inventoryItem, scanMetadata);
         
+        // Stop camera before closing
+        stopCamera();
         onProductCreated();
         onClose();
     } catch(err) {
@@ -341,7 +354,10 @@ const ProductLearningScanner: React.FC<ProductLearningScannerProps> = ({ onClose
       <div className="w-full md:w-96 bg-gray-900/80 backdrop-blur-sm border-l border-gray-700 flex flex-col p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">Learn Product</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-white">&times;</button>
+            <button onClick={() => {
+              stopCamera();
+              onClose();
+            }} className="text-gray-400 hover:text-white">&times;</button>
           </div>
           <div className="flex-grow overflow-y-auto space-y-2 pr-2">
             {(Object.keys(fieldMetadata) as Array<keyof typeof fieldMetadata>).map(key => {

@@ -90,6 +90,34 @@ const slugifyProductName = useCallback((value?: string) => {
   return value.toLowerCase().trim().replace(/[^a-z0-9]+/gi, '-');
 }, []);
 
+  // Normalize product name for matching (case-insensitive, trimmed)
+  const normalizeProductName = useCallback((name: string): string => {
+    return name.toLowerCase().trim();
+  }, []);
+
+  // Find existing product by name (case-insensitive match)
+  const findExistingProductByName = useCallback((productName: string): { id: string; name: string; source: 'canonical' | 'summary' } | null => {
+    if (!productName || !productName.trim()) return null;
+    
+    const normalizedName = normalizeProductName(productName);
+    
+    // First check canonical products
+    for (const product of canonicalProducts) {
+      if (normalizeProductName(product.name) === normalizedName) {
+        return { id: product.id, name: product.name, source: 'canonical' };
+      }
+    }
+    
+    // Then check summaries (products from inventory)
+    for (const summary of summaries) {
+      if (normalizeProductName(summary.productName) === normalizedName) {
+        return { id: summary.productId, name: summary.productName, source: 'summary' };
+      }
+    }
+    
+    return null;
+  }, [canonicalProducts, summaries, normalizeProductName]);
+
   const updateShareScope = useCallback((scope: DanShareScope, enabled: boolean) => {
     setCurrentItem(prev => {
       const next = new Set<DanShareScope>(normalizeShareScope(prev.shareScope));
@@ -196,6 +224,7 @@ useEffect(() => {
         deliveryDate: prev.deliveryDate || scannedData.deliveryDate || '',
     }));
 
+    // First, check if we have an identifiedProductId from the scan
     if (identifiedProductId) {
         const product = canonicalProducts.find(p => p.id === identifiedProductId);
         if (product) {
@@ -222,6 +251,42 @@ useEffect(() => {
         }
     }
 
+    // If no identifiedProductId OR identified product not found, 
+    // check if the scanned productName matches an existing product by name
+    const scannedProductName = scannedData.productName;
+    if (scannedProductName && scannedProductName.trim()) {
+        const existingProduct = findExistingProductByName(scannedProductName);
+        if (existingProduct) {
+            // Found matching product - auto-select it to prevent duplicates
+            const fullProduct = existingProduct.source === 'canonical' 
+                ? canonicalProducts.find(p => p.id === existingProduct.id)
+                : null;
+            
+            setNeedsProductRegistration(false);
+            setProductMode('existing');
+            setSelectedProductId(existingProduct.id);
+            setCurrentItem(prev => ({
+                ...prev,
+                productId: existingProduct.id,
+                productName: existingProduct.name,
+                // If we have full product data, use it; otherwise use scanned data as fallback
+                manufacturer: fullProduct?.manufacturer || scannedData.manufacturer || prev.manufacturer || '',
+                category: fullProduct?.category || scannedData.category || prev.category || '',
+                productDescription: fullProduct?.description || scannedData.productDescription || prev.productDescription || '',
+                // Pre-populate all scanned fields, allowing user to verify and edit
+                expirationDate: scannedData.expirationDate || prev.expirationDate || '',
+                quantity: scannedData.quantity || prev.quantity || 1,
+                quantityType: scannedData.quantityType || prev.quantityType || 'units',
+                costPerUnit: scannedData.costPerUnit || prev.costPerUnit || 0,
+                buyPrice: scannedData.buyPrice || prev.buyPrice || 0,
+                sellPrice: scannedData.sellPrice || prev.sellPrice,
+                location: scannedData.location || prev.location || '',
+            }));
+            return;
+        }
+    }
+
+    // No matching product found - this is truly a new product
     setProductMode('new');
     setNeedsProductRegistration(true);
     setCurrentItem(prev => ({
@@ -239,7 +304,7 @@ useEffect(() => {
         sellPrice: scannedData.sellPrice || prev.sellPrice,
         location: scannedData.location || prev.location || '',
     }));
-  }, [fieldImagePreviews, canonicalProducts]);
+  }, [fieldImagePreviews, canonicalProducts, summaries, findExistingProductByName]);
 
 // Process pending scan result from overview mode - prepopulate form for user verification
 useEffect(() => {
@@ -409,9 +474,12 @@ useEffect(() => {
     }
   };
 
-  const handleFinishBatch = () => {
+  const handleFinishBatch = async () => {
     if (stagedItems.length > 0 && batchData.supplier && batchData.deliveryDate) {
-      onAddBatch(batchData, stagedItems);
+      // Only save the batch and refresh data when "Save Batch" is clicked
+      // This is the ONLY time data should be saved and refreshed
+      await onAddBatch(batchData, stagedItems);
+      // Clear form state after successful save (the page will refresh via onAddBatch)
       setBatchData(initialBatchState);
       setStagedItems([]);
     } else {
@@ -482,6 +550,7 @@ useEffect(() => {
                           setCurrentItem(prev => ({ ...prev, productId: undefined, productName: '', manufacturer: '', category: '', productDescription: '' }));
                           return;
                         }
+                        // First try to find in canonical products
                         const product = canonicalProducts.find(p => p.id === value);
                         if (product) {
                           setCurrentItem(prev => ({
@@ -492,6 +561,19 @@ useEffect(() => {
                             category: product.category,
                             productDescription: product.description || '',
                           }));
+                          return;
+                        }
+                        // If not found in canonical, try summaries (products from inventory)
+                        const summary = summaries.find(s => s.productId === value);
+                        if (summary) {
+                          setCurrentItem(prev => ({
+                            ...prev,
+                            productId: summary.productId,
+                            productName: summary.productName,
+                            manufacturer: summary.manufacturer || '',
+                            category: summary.category || '',
+                            productDescription: prev.productDescription || '', // Summaries don't have description
+                          }));
                         }
                       }}
                     >
@@ -501,6 +583,14 @@ useEffect(() => {
                           {product.name} — {product.manufacturer}
                         </option>
                       ))}
+                      {/* Also show products from summaries that might not be in canonical products yet */}
+                      {summaries
+                        .filter(summary => !canonicalProducts.some(p => p.id === summary.productId || p.name.toLowerCase().trim() === summary.productName.toLowerCase().trim()))
+                        .map(summary => (
+                          <option key={summary.productId} value={summary.productId}>
+                            {summary.productName} — {summary.manufacturer || 'Unknown'}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 ) : (

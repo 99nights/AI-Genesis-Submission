@@ -14,6 +14,7 @@ const KioskScanner: React.FC<KioskScannerProps> = ({ summaries, onProductScanned
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scanIntervalRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   
   const [status, setStatus] = useState<ScanStatus>('SCANNING');
   const [lastScannedProduct, setLastScannedProduct] = useState<string | null>(null);
@@ -26,6 +27,16 @@ const KioskScanner: React.FC<KioskScannerProps> = ({ summaries, onProductScanned
     if (scanIntervalRef.current) {
       clearInterval(scanIntervalRef.current);
       scanIntervalRef.current = null;
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
   }, []);
 
@@ -68,17 +79,16 @@ const KioskScanner: React.FC<KioskScannerProps> = ({ summaries, onProductScanned
   }, [productNames, onProductScanned, stopScanner]);
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    
     const startCameraAndScanner = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
+        const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
             width: { ideal: 1280 },
             height: { ideal: 720 }
           } 
         });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -95,11 +105,9 @@ const KioskScanner: React.FC<KioskScannerProps> = ({ summaries, onProductScanned
 
     return () => {
       stopScanner();
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
-  }, [performScan, stopScanner]);
+  }, [performScan, stopScanner, stopCamera]);
 
   const getStatusUI = () => {
     switch(status) {
@@ -139,12 +147,18 @@ const KioskScanner: React.FC<KioskScannerProps> = ({ summaries, onProductScanned
         {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
       </div>
 
-      <button onClick={onClose} className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-30" aria-label="Close scanner">
+      <button onClick={() => {
+        stopCamera();
+        onClose();
+      }} className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-30" aria-label="Close scanner">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
 
       <button
-        onClick={onClose}
+        onClick={() => {
+          stopCamera();
+          onClose();
+        }}
         className="mt-8 px-8 py-3 bg-cyan-600 text-white font-bold rounded-lg hover:bg-cyan-700 transition-colors shadow-lg"
       >
         Done Scanning

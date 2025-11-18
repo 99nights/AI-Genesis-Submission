@@ -35,6 +35,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
   const captureCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
   const autoScanIntervalRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [geminiOverload, setGeminiOverload] = useState(false);
@@ -112,6 +113,16 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
     }
   }, []);
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
   const handleResize = useCallback(() => {
     if (videoRef.current && overlayCanvasRef.current) {
       const video = videoRef.current;
@@ -123,21 +134,20 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
   }, []);
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    
     const startCamera = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         setError("Camera not supported on this browser. Please use a modern browser on a secure (HTTPS) connection.");
         return;
       }
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ 
+        const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: 'environment',
             width: { ideal: 1920 },
             height: { ideal: 1080 }
           } 
         });
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.onloadedmetadata = () => handleResize();
@@ -154,11 +164,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
     return () => {
       window.removeEventListener('resize', handleResize);
       clearAutoScanInterval();
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopCamera();
     };
-  }, [handleResize, clearAutoScanInterval]);
+  }, [handleResize, clearAutoScanInterval, stopCamera]);
 
   const performAutoScan = useCallback(async () => {
     if (!videoRef.current || !captureCanvasRef.current || document.hidden || mode !== 'auto-scanning') return;
@@ -422,6 +430,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
           fieldSources: new Map(),
           fieldConfidences: new Map(),
         };
+        // Stop camera before closing
+        stopCamera();
         onDataScanned(result);
         onClose();
       } else {
@@ -430,7 +440,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
       return;
     }
     
-    // Normal scan mode
+    // Normal scan mode - stop camera before closing
+    stopCamera();
     onDataScanned({
       data: { ...scannedData },
       blobs: new Map(capturedBlobs),
@@ -529,7 +540,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
         </div>
       )}
 
-      <button onClick={onClose} className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-30" aria-label="Close scanner">
+      <button onClick={() => {
+        stopCamera();
+        onClose();
+      }} className="absolute top-4 right-4 text-white bg-black/50 rounded-full p-2 hover:bg-black/80 transition-colors z-30" aria-label="Close scanner">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
 

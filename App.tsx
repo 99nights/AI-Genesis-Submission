@@ -130,10 +130,16 @@ const App: React.FC = () => {
     init();
   }, [requiresLogin, currentUser?.shopId, refreshData]);
 
+  // Track if inventory form is active to prevent auto-refresh during scanning
+  const isInventoryFormActiveRef = useRef(false);
+
   useEffect(() => {
     if (!currentUser || !hasShopRole) return;
     const interval = setInterval(() => {
-      refreshData(currentUser);
+      // Don't refresh if user is actively using the inventory form (scanning/adding items)
+      if (!isInventoryFormActiveRef.current) {
+        refreshData(currentUser);
+      }
     }, 60000);
     return () => clearInterval(interval);
   }, [currentUser, hasShopRole, refreshData]);
@@ -252,7 +258,16 @@ const App: React.FC = () => {
         )}
         
         {activeTab === 'inventory' && hasShopRole && (
-        <InventoryPage summaries={productSummaries} items={legacyItems} batches={batches} onAddBatch={addInventoryBatch} onDataRefresh={() => currentUser && refreshData(currentUser)} />
+        <InventoryPage 
+          summaries={productSummaries} 
+          items={legacyItems} 
+          batches={batches} 
+          onAddBatch={addInventoryBatch} 
+          onDataRefresh={() => currentUser && refreshData(currentUser)}
+          onInventoryFormActiveChange={(isActive) => {
+            isInventoryFormActiveRef.current = isActive;
+          }}
+        />
         )}
         {activeTab === 'catalog' && hasShopRole && <ProductCatalogPage />}
         {activeTab === 'batches' && hasShopRole && <BatchesPage />}

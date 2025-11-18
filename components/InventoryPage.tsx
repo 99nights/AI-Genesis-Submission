@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { ProductSummary, NewInventoryItemData, StockItem } from '../types';
 import { InventoryItem, InventoryBatch } from '../legacyTypes';
 import InventoryGrid from './InventoryGrid';
@@ -23,6 +23,7 @@ interface InventoryPageProps {
   batches: InventoryBatch[];
   onAddBatch: (batch: Omit<InventoryBatch, 'id'>, items: NewInventoryItemData[]) => void;
   onDataRefresh: () => void;
+  onInventoryFormActiveChange?: (isActive: boolean) => void;
 }
 
 type ViewMode = 'grid' | 'table';
@@ -33,12 +34,23 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   items, 
   batches, 
   onAddBatch, 
-  onDataRefresh 
+  onDataRefresh,
+  onInventoryFormActiveChange
 }) => {
   const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [inventoryMode, setInventoryMode] = useState<InventoryMode>('overview');
   const [isLiveScanning, setIsLiveScanning] = useState(false);
+
+  // Notify parent when inventory form becomes active/inactive to prevent auto-refresh
+  useEffect(() => {
+    const isActive = inventoryMode === 'manual' || isLiveScanning;
+    onInventoryFormActiveChange?.(isActive);
+    return () => {
+      // Reset on unmount
+      onInventoryFormActiveChange?.(false);
+    };
+  }, [inventoryMode, isLiveScanning, onInventoryFormActiveChange]);
   const [isShelfScanning, setIsShelfScanning] = useState(false);
   const [visualSearchResults, setVisualSearchResults] = useState<StockItem[] | null>(null);
   const [isVisualSearching, setIsVisualSearching] = useState(false);
@@ -92,9 +104,10 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
 
   const handleBatchAdded = useCallback(() => {
     setInventoryMode('overview');
-    onDataRefresh();
     showToast('Inventory batch added successfully!', 'success');
-  }, [onDataRefresh, showToast]);
+    // Note: onDataRefresh is NOT called here because addInventoryBatch in App.tsx 
+    // already calls refreshData. This prevents duplicate refreshes.
+  }, [showToast]);
 
   const [isVisualScanning, setIsVisualScanning] = useState(false);
 
@@ -444,8 +457,10 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
 
         {inventoryMode === 'manual' && (
           <InventoryForm
-            onAddBatch={(batch, items) => {
-              onAddBatch(batch, items);
+            onAddBatch={async (batch, items) => {
+              // Save the batch first (this already calls refreshData in App.tsx)
+              await onAddBatch(batch, items);
+              // Then handle UI state changes and show success message
               handleBatchAdded();
               setPendingScanResult(null); // Clear pending scan after batch is added
             }}
