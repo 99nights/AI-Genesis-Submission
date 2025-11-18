@@ -209,10 +209,14 @@ useEffect(() => {
                 manufacturer: product.manufacturer,
                 category: product.category,
                 productDescription: product.description || '',
+                // Pre-populate all scanned fields, allowing user to verify and edit
                 expirationDate: scannedData.expirationDate || prev.expirationDate || '',
                 quantity: scannedData.quantity || prev.quantity || 1,
                 quantityType: scannedData.quantityType || prev.quantityType || 'units',
                 costPerUnit: scannedData.costPerUnit || prev.costPerUnit || 0,
+                buyPrice: scannedData.buyPrice || prev.buyPrice || 0,
+                sellPrice: scannedData.sellPrice || prev.sellPrice,
+                location: scannedData.location || prev.location || '',
             }));
             return;
         }
@@ -222,13 +226,18 @@ useEffect(() => {
     setNeedsProductRegistration(true);
     setCurrentItem(prev => ({
         ...prev,
+        // Pre-populate all scanned fields for new products, allowing user to verify and edit
         productName: scannedData.productName || prev.productName || '',
         manufacturer: scannedData.manufacturer || prev.manufacturer || '',
         category: scannedData.category || prev.category || '',
+        productDescription: scannedData.productDescription || prev.productDescription || '',
         expirationDate: scannedData.expirationDate || prev.expirationDate || '',
         quantity: scannedData.quantity || prev.quantity || 0,
         quantityType: scannedData.quantityType || prev.quantityType || 'units',
         costPerUnit: scannedData.costPerUnit || prev.costPerUnit || 0,
+        buyPrice: scannedData.buyPrice || prev.buyPrice || 0,
+        sellPrice: scannedData.sellPrice || prev.sellPrice,
+        location: scannedData.location || prev.location || '',
     }));
   }, [fieldImagePreviews, canonicalProducts]);
 

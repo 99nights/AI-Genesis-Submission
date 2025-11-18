@@ -35,13 +35,30 @@ export const VECTOR_CONFIG = {
   distance: 'Cosine' as const,
 } as const;
 
-// Normalize Qdrant URL
+// Normalize Qdrant URL - convert relative URLs to absolute URLs
 const normalizeQdrantUrl = (raw?: string | null): string | null => {
   if (!raw) return null;
   let trimmed = raw.trim();
   while (trimmed.endsWith('/')) {
     trimmed = trimmed.slice(0, -1);
   }
+  
+  // If the URL doesn't start with http:// or https://, it's a relative URL
+  // Convert it to an absolute URL using the current origin
+  if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    // In browser environment, use window.location.origin
+    if (typeof window !== 'undefined') {
+      const origin = window.location.origin;
+      // Remove leading slash if present to avoid double slashes
+      const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+      trimmed = `${origin}${path}`;
+    } else {
+      // In Node.js environment, this shouldn't happen, but fallback to localhost
+      console.warn('[Qdrant Core] Relative URL in non-browser environment, using localhost fallback');
+      trimmed = `http://localhost:8787${trimmed.startsWith('/') ? trimmed : `/${trimmed}`}`;
+    }
+  }
+  
   return trimmed;
 };
 
@@ -52,7 +69,24 @@ const qdrantUrl = normalizeQdrantUrl(
   'http://localhost:8787/qdrant'
 );
 
-export const qdrantClient = qdrantUrl ? new QdrantClient({ url: qdrantUrl }) : null;
+// Validate URL format before creating client
+let qdrantClient: QdrantClient | null = null;
+if (qdrantUrl) {
+  try {
+    // Validate that the URL has a protocol
+    if (!qdrantUrl.startsWith('http://') && !qdrantUrl.startsWith('https://')) {
+      console.error('[Qdrant Core] Invalid Qdrant URL - must start with http:// or https://:', qdrantUrl);
+    } else {
+      // Validate URL format
+      new URL(qdrantUrl);
+      qdrantClient = new QdrantClient({ url: qdrantUrl });
+    }
+  } catch (error) {
+    console.error('[Qdrant Core] Failed to create Qdrant client - invalid URL:', qdrantUrl, error);
+  }
+}
+
+export { qdrantClient };
 
 // Active shop context (shared state)
 export let activeShopId: string | null = null;
