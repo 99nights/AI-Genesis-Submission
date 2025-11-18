@@ -43,13 +43,12 @@ const normalizeQdrantUrl = (raw?: string | null): string | null => {
     trimmed = trimmed.slice(0, -1);
   }
   
-  // If the URL doesn't start with http:// or https://, it's a relative URL
-  // Convert it to an absolute URL using the current origin
+  // If URL doesn't have a protocol, it's relative - convert to absolute
+  // This happens in production when vite.config.ts sets QDRANT_URL to '/qdrant'
   if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
-    // In browser environment, use window.location.origin
-    if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    // In browser, use window.location.origin to get the full URL
+    if (typeof window !== 'undefined' && window.location) {
       const origin = window.location.origin;
-      // Ensure path starts with / and combine with origin
       const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
       trimmed = `${origin}${path}`;
       console.log('[Qdrant Core] Converted relative URL to absolute:', raw, '->', trimmed);
