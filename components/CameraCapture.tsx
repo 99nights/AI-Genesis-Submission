@@ -1,7 +1,7 @@
 
 
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
-import { analyzeCroppedImageForField, analyzeImageForInventory, fieldMetadata, ScannedItemData, identifyProductNameFromImage, findAndReadFeature, dataUrlToBlob } from '../services/geminiService';
+import { analyzeCroppedImageForField, analyzeImageForInventory, fieldMetadata, ScannedItemData, identifyProductNameFromImage, findAndReadFeature, dataUrlToBlob, GeminiOverloadError } from '../services/geminiService';
 import { getLearnedFieldsForProduct } from '../services/vectorDBService';
 import { LockIcon } from './icons/LockIcon';
 import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
@@ -37,6 +37,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
   const autoScanIntervalRef = useRef<number | null>(null);
 
   const [error, setError] = useState<string | null>(null);
+  const [geminiOverload, setGeminiOverload] = useState(false);
   const [scannedData, setScannedData] = useState<Partial<ScannedItemData>>({});
   const [fieldSources, setFieldSources] = useState(new Map<keyof ScannedItemData | 'productId', CameraScanSource>());
   const [fieldConfidences, setFieldConfidences] = useState(new Map<keyof ScannedItemData | 'productId', number>());
@@ -181,7 +182,19 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
       if (matchedProduct?.productId !== identifiedProduct?.productId) {
         setIdentifiedProduct(matchedProduct);
       }
+      // Clear overload error if request succeeds
+      if (geminiOverload) {
+        setGeminiOverload(false);
+        setError(null);
+      }
     } catch (err) {
+      if (err instanceof GeminiOverloadError) {
+        setGeminiOverload(true);
+        setError(err.message);
+        // Pause auto-scanning when overloaded
+        clearAutoScanInterval();
+        return;
+      }
       console.warn('Product identification failed:', err);
     }
 
@@ -196,15 +209,32 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
               const existingConfidence = fieldConfidenceRef.current.get(typedField) ?? 0;
               if (existingConfidence >= 0.85) return;
               const featureBlob = dataUrlToBlob(`data:${imageData.mimeType};base64,${imageData.imageBase64}`);
-              const result = await findAndReadFeature(fullImageBlob, featureBlob, typedField);
-              if (result !== null) {
-                updateFieldValue(typedField, result, 'learned', 0.85);
-                setLearnedScannedFields(prev => new Set(prev).add(typedField));
+              try {
+                const result = await findAndReadFeature(fullImageBlob, featureBlob, typedField);
+                if (result !== null) {
+                  updateFieldValue(typedField, result, 'learned', 0.85);
+                  setLearnedScannedFields(prev => new Set(prev).add(typedField));
+                }
+              } catch (fieldErr) {
+                if (fieldErr instanceof GeminiOverloadError) {
+                  throw fieldErr; // Re-throw to be caught by outer catch
+                }
               }
             })
           );
         }
+        // Clear overload error if request succeeds
+        if (geminiOverload) {
+          setGeminiOverload(false);
+          setError(null);
+        }
       } catch (err) {
+        if (err instanceof GeminiOverloadError) {
+          setGeminiOverload(true);
+          setError(err.message);
+          clearAutoScanInterval();
+          return;
+        }
         console.warn('Learned field scan failed:', err);
       }
     }
@@ -217,7 +247,18 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
           updateFieldValue(fieldKey, (genericResult as any)[fieldKey], 'auto', 0.6);
         }
       }
+      // Clear overload error if request succeeds
+      if (geminiOverload) {
+        setGeminiOverload(false);
+        setError(null);
+      }
     } catch (err) {
+      if (err instanceof GeminiOverloadError) {
+        setGeminiOverload(true);
+        setError(err.message);
+        clearAutoScanInterval();
+        return;
+      }
       console.warn("Generic auto-scan analysis failed:", err);
     }
   }, [
@@ -227,7 +268,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
     productLookup,
     productNames,
     updateFieldValue,
-    learnedScannedFields
+    learnedScannedFields,
+    geminiOverload,
+    clearAutoScanInterval
   ]);
 
   useEffect(() => {
@@ -338,8 +381,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
                 return newSet;
             });
           } catch(err) {
-            console.error(err);
-            setError(err instanceof Error ? err.message : 'Analysis failed');
+            if (err instanceof GeminiOverloadError) {
+              setGeminiOverload(true);
+              setError(err.message);
+            } else {
+              console.error(err);
+              setError(err instanceof Error ? err.message : 'Analysis failed');
+            }
           }
         }
         setSelectedField(null);
@@ -443,7 +491,33 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onDataScanned, onClose, p
         </div>
       )}
 
-      {error && <div className="absolute top-4 bg-red-800/80 text-white p-3 rounded-lg text-center z-30 max-w-md mx-auto">{error}</div>}
+      {geminiOverload && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-600/95 text-white p-4 rounded-lg text-center z-30 max-w-md mx-auto shadow-2xl border-2 border-yellow-400">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <svg className="w-6 h-6 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <h3 className="text-lg font-bold">Gemini API Overloaded</h3>
+          </div>
+          <p className="text-sm mb-3">{error || 'Gemini API is currently overloaded. Please wait a moment and try again.'}</p>
+          <button
+            onClick={() => {
+              setGeminiOverload(false);
+              setError(null);
+              // Resume auto-scanning
+              if (mode === 'auto-scanning' && !autoScanIntervalRef.current) {
+                autoScanIntervalRef.current = window.setInterval(performAutoScan, 4000);
+              }
+            }}
+            className="px-4 py-2 bg-yellow-700 hover:bg-yellow-800 rounded-md text-sm font-semibold transition-colors"
+          >
+            Retry Now
+          </button>
+        </div>
+      )}
+      {error && !geminiOverload && (
+        <div className="absolute top-4 bg-red-800/80 text-white p-3 rounded-lg text-center z-30 max-w-md mx-auto">{error}</div>
+      )}
 
       <div className="absolute top-4 bg-black/50 text-white px-4 py-2 rounded-full z-20 text-center">
         <p>{getPrompt()}</p>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopNexus Development Story</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/theme/white.css">
+    <style>
+        .reveal .slides section {
+            text-align: left;
+        }
+        .reveal h1, .reveal h2, .reveal h3 {
+            color: #2c3e50;
+        }
+        .reveal .slide-number {
+            font-size: 20px;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .stat {
+            font-size: 2em;
+            color: #3498db;
+            font-weight: bold;
+        }
+        .quote {
+            font-style: italic;
+            color: #7f8c8d;
+            border-left: 4px solid #3498db;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Slide 1: An Idea was born -->
+            <section>
+                <h1>An Idea was born</h1>
+                <p class="fragment">We were discussing a local shop being replaced by a <span class="highlight">24/7 self-service shop</span></p>
+                <p class="fragment">Noticed they are still looking for a <span class="highlight">150% Pensum</span> to operate</p>
+                <p class="fragment">Realized: <span class="highlight">Taking inventory by hand is very time-consuming</span></p>
+                <p class="fragment quote">The spark: What if we could automate inventory tracking completely?</p>
+            </section>
+
+            <!-- Slide 2: Problem Statement -->
+            <section>
+                <h1>The Problem We're Solving</h1>
+                <p class="fragment"><span class="stat">20-40 hours/week</span> spent on manual inventory counts</p>
+                <p class="fragment"><span class="stat">€50K/year</span> lost to waste and inefficiency</p>
+                <p class="fragment">Operators lose valuable time on:</p>
+                <ul class="fragment">
+                    <li>Manual shelf counting</li>
+                    <li>After-hours inventory work</li>
+                    <li>Stockout management</li>
+                    <li>Waste tracking</li>
+                </ul>
+                <p class="fragment highlight">Manual processes don't scale</p>
+            </section>
+
+            <!-- Slide 3: Solution Overview -->
+            <section>
+                <h1>ShopNexus: The Complete Solution</h1>
+                <div class="fragment">
+                    <h3>Core Components:</h3>
+                    <ul>
+                        <li><strong>Real-Time Inventory Engine</strong> - Camera-based OCR scanning</li>
+                        <li><strong>Intelligent POS & Analytics</strong> - Performance scoring & insights</li>
+                        <li><strong>Waste Prevention System</strong> - Automated alerts & markdowns</li>
+                        <li><strong>RAG-Powered Insights</strong> - Natural language queries</li>
+                        <li><strong>Peer-to-Peer Marketplace</strong> - Network of connected shops</li>
+                    </ul>
+                </div>
+                <div class="fragment" style="margin-top: 40px;">
+                    <p><span class="stat">85%</span> reduction in inventory time</p>
+                    <p><span class="stat">35-60%</span> waste reduction</p>
+                    <p><span class="stat">€4K/month</span> savings per shop</p>
+                </div>
+            </section>
+
+            <!-- Slide 4: Gemini AI Studio -->
+            <section>
+                <h1>Rapid Prototyping with Gemini AI Studio</h1>
+                <p class="fragment highlight">Built a working prototype in a single night</p>
+                <div class="fragment">
+                    <h3>What We Built:</h3>
+                    <ul>
+                        <li>Camera-based OCR system</li>
+                        <li>Product identification from images</li>
+                        <li>Batch document processing</li>
+                        <li>Visual feature learning</li>
+                    </ul>
+                </div>
+                <div class="fragment">
+                    <h3>Key Breakthrough:</h3>
+                    <p class="quote">Real-time image-to-JSON conversion with enforced schemas opened entirely new possibilities for inventory automation</p>
+                </div>
+                <p class="fragment">Models: <code>gemini-2.5-flash</code> (fast) + <code>gemini-2.5-pro</code> (advanced analysis)</p>
+            </section>
+
+            <!-- Slide 5: Parallel Qdrant Integration -->
+            <section>
+                <h1>Parallel Qdrant Integration with CursorAI</h1>
+                <p class="fragment">While developing Gemini workflows, we simultaneously built the vector database foundation</p>
+                <div class="fragment">
+                    <h3>What We Built:</h3>
+                    <ul>
+                        <li>10+ specialized Qdrant collections</li>
+                        <li>Semantic search for product catalog</li>
+                        <li>Vector embeddings for visual features</li>
+                        <li>Indexed payloads for efficient querying</li>
+                        <li>Multi-tenant namespace architecture</li>
+                    </ul>
+                </div>
+                <p class="fragment highlight">Result: Robust vector database foundation powering semantic search, RAG queries, and intelligent matching</p>
+            </section>
+
+            <!-- Slide 6: The Mess Gemini created -->
+            <section>
+                <h1>The Challenge: Cleaning Up AI-Generated Code</h1>
+                <p class="fragment">Gemini enabled rapid prototyping, but the code needed significant refactoring</p>
+                <div class="fragment">
+                    <h3>Issues We Encountered:</h3>
+                    <ul>
+                        <li>Code organization not production-ready</li>
+                        <li>Missing TypeScript types</li>
+                        <li>Incomplete error handling</li>
+                        <li>Inefficient patterns</li>
+                    </ul>
+                </div>
+                <div class="fragment">
+                    <h3>What We Fixed:</h3>
+                    <ul>
+                        <li>Refactored service layer architecture</li>
+                        <li>Added comprehensive TypeScript types</li>
+                        <li>Implemented proper error handling</li>
+                        <li>Optimized database queries</li>
+                    </ul>
+                </div>
+                <p class="fragment quote">Lesson: AI accelerates development, but human oversight is essential for production quality</p>
+            </section>
+
+            <!-- Slide 7: Final Qdrant Integration -->
+            <section>
+                <h1>Production-Ready Vector Database Architecture</h1>
+                <div class="fragment">
+                    <h3>Architecture Highlights:</h3>
+                    <ul>
+                        <li><strong>Collection Strategy:</strong> 10+ specialized collections</li>
+                        <li><strong>Point ID Design:</strong> Deterministic IDs with namespace isolation</li>
+                        <li><strong>Vector Embeddings:</strong> Products, visual features, queries</li>
+                        <li><strong>Payload Indexes:</strong> Optimized for fast filtering</li>
+                    </ul>
+                </div>
+                <div class="fragment">
+                    <h3>Key Features:</h3>
+                    <ul>
+                        <li>Semantic product search</li>
+                        <li>Visual feature storage & matching</li>
+                        <li>FEFO batch processing</li>
+                        <li>RAG-powered natural language queries</li>
+                    </ul>
+                </div>
+                <p class="fragment highlight">Result: Scalable, maintainable vector database layer powering all intelligent features</p>
+            </section>
+
+            <!-- Slide 8: Philosophizing about the future -->
+            <section>
+                <h1>Vision: The Future of Autonomous Retail</h1>
+                <div class="fragment">
+                    <h3>Our Vision:</h3>
+                    <ul>
+                        <li>Truly autonomous shops with zero-touch inventory</li>
+                        <li>Network effects: Connected shops forming local supply networks</li>
+                        <li>AI-first operations: Natural language as primary interface</li>
+                        <li>Waste elimination through predictive systems</li>
+                    </ul>
+                </div>
+                <div class="fragment">
+                    <p><span class="stat">$82B → $600B</span> autonomous retail by 2034</p>
+                    <p><span class="stat">24.7% CAGR</span> market growth</p>
+                </div>
+                <p class="fragment quote">ShopNexus: The "Linux of autonomous retail"</p>
+            </section>
+
+            <!-- Slide 9: How we ended up in Dubai -->
+            <section>
+                <h1>The Dubai Story: When Plans Go Sideways</h1>
+                <p class="fragment highlight">Lost notebook containing critical development notes</p>
+                <div class="fragment">
+                    <h3>What We Learned:</h3>
+                    <ul>
+                        <li>Documentation matters - code should be self-documenting</li>
+                        <li>Version control - everything important in git</li>
+                        <li>Team communication prevents single points of failure</li>
+                        <li>Setbacks can lead to better processes</li>
+                    </ul>
+                </div>
+                <p class="fragment quote">Silver Lining: Forced us to create comprehensive documentation, making the project stronger</p>
+                <p class="fragment highlight">Always document as you go. Future you will thank you.</p>
+            </section>
+
+            <!-- Slide 10: Business Value -->
+            <section>
+                <h1>Delivering Value Despite Challenges</h1>
+                <div class="fragment">
+                    <h3>Business Value Delivered:</h3>
+                    <ul>
+                        <li><span class="stat">85%</span> reduction in inventory time</li>
+                        <li><span class="stat">35-60%</span> waste reduction</li>
+                        <li><span class="stat">€4K/month</span> savings per shop</li>
+                        <li><span class="stat">30 hours/week</span> saved per operator</li>
+                    </ul>
+                </div>
+                <div class="fragment">
+                    <h3>Customer ROI:</h3>
+                    <p>Average shop saves <span class="stat">€4K/month</span></p>
+                    <p>Pays for itself in <span class="stat">6 weeks</span></p>
+                    <p>Creates network effects as more shops join</p>
+                </div>
+                <p class="fragment highlight">We didn't just build technology—we built measurable business value</p>
+            </section>
+
+            <!-- Slide 11: Summary -->
+            <section>
+                <h1>ShopNexus: From Idea to Impact</h1>
+                <div class="fragment">
+                    <h3>The Journey:</h3>
+                    <ol>
+                        <li>Observation → Real problem identified</li>
+                        <li>Rapid Prototyping → Gemini AI Studio overnight</li>
+                        <li>Parallel Development → Qdrant integration</li>
+                        <li>Refactoring → Production-ready code</li>
+                        <li>Value Creation → Measurable business impact</li>
+                    </ol>
+                </div>
+                <div class="fragment" style="margin-top: 40px;">
+                    <h3>Impact:</h3>
+                    <p><span class="stat">85%</span> time reduction | <span class="stat">35-60%</span> waste reduction | <span class="stat"><2 months</span> ROI</p>
+                </div>
+                <p class="fragment quote">From idea to production-ready solution that creates real business value—fast.</p>
+            </section>
+
+            <!-- Thank You Slide -->
+            <section>
+                <h1>Thank You</h1>
+                <h2>Questions?</h2>
+                <p style="margin-top: 60px;">
+                    <strong>ShopNexus</strong><br>
+                    The AI Operating System for Autonomous Retail
+                </p>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.3.1/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            controls: true,
+            progress: true,
+            center: true,
+            transition: 'slide',
+            slideNumber: true
+        });
+    </script>
+</body>
+</html>
+

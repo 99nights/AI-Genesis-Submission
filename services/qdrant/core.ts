@@ -152,7 +152,7 @@ const initializeQdrantClient = (): QdrantClient | null => {
     // The QdrantClient library stores the URL internally, so we can't directly access it
     // But we can test it by making a simple request
     console.log('[Qdrant Core] QdrantClient created successfully with URL:', finalUrl);
-    console.log('[Qdrant Core] Client will make requests to:', finalUrl + '/collections (example)');
+    console.log('[Qdrant Core] Client will make requests to:', finalUrl + '/collections');
     
     return _qdrantClient;
   } catch (error) {

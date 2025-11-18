@@ -12,6 +12,37 @@ if (!API_KEY) {
   throw new Error("API_KEY environment variable not set");
 }
 
+// Custom error class for Gemini overload/rate limit errors
+export class GeminiOverloadError extends Error {
+  constructor(message: string = 'Gemini API is currently overloaded. Please try again in a moment.') {
+    super(message);
+    this.name = 'GeminiOverloadError';
+  }
+}
+
+// Helper function to detect Gemini overload/rate limit errors
+const isGeminiOverloadError = (error: any): boolean => {
+  if (!error) return false;
+  
+  const errorMessage = String(error.message || error.toString() || '').toLowerCase();
+  const errorCode = error.code || error.status || error.statusCode;
+  
+  // Check for common overload indicators
+  return (
+    errorCode === 429 || // Too Many Requests
+    errorCode === 503 || // Service Unavailable
+    errorCode === 'RESOURCE_EXHAUSTED' ||
+    errorMessage.includes('quota') ||
+    errorMessage.includes('rate limit') ||
+    errorMessage.includes('overload') ||
+    errorMessage.includes('resource exhausted') ||
+    errorMessage.includes('too many requests') ||
+    errorMessage.includes('service unavailable') ||
+    errorMessage.includes('backend error') ||
+    (errorCode >= 500 && errorCode < 600) // 5xx server errors
+  );
+};
+
 // This type is for the form, which includes batch and item details
 // FIX: Added 'productDescription' to ScannedItemData to match usage in InventoryForm and ProductLearningScanner.
 export type ScannedItemData = Omit<InventoryItem, 'id' | 'batchId'> & Partial<Omit<InventoryBatch, 'id'>> & {productDescription?: string};
@@ -185,6 +216,12 @@ export const analyzeImageForInventory = async (imageFile: File | Blob): Promise<
 
   } catch (error) {
     console.error("Error analyzing image with Gemini:", error);
+    
+    // Check if this is a Gemini overload/rate limit error
+    if (isGeminiOverloadError(error)) {
+      throw new GeminiOverloadError("Gemini API is currently overloaded. Please wait a moment and try again.");
+    }
+    
     throw new Error("Failed to extract inventory data from the image.");
   }
 };
@@ -215,6 +252,12 @@ export const analyzeCroppedImageForField = async (
     return text;
   } catch (error) {
     console.error(`Error analyzing cropped image for field ${fieldName}:`, error);
+    
+    // Check if this is a Gemini overload/rate limit error
+    if (isGeminiOverloadError(error)) {
+      throw new GeminiOverloadError("Gemini API is currently overloaded. Please wait a moment and try again.");
+    }
+    
     throw new Error(`Failed to extract data for ${fieldName}.`);
   }
 };
@@ -380,6 +423,12 @@ export const identifyProductNameFromImage = async (imageFile: Blob, productNames
 
   } catch (error) {
     console.error("Error identifying product:", error);
+    
+    // Check if this is a Gemini overload/rate limit error
+    if (isGeminiOverloadError(error)) {
+      throw new GeminiOverloadError("Gemini API is currently overloaded. Please wait a moment and try again.");
+    }
+    
     return null;
   }
 };
@@ -432,6 +481,12 @@ export const findAndReadFeature = async (
         return text;
     } catch (error) {
         console.error(`Error finding feature for field ${fieldName}:`, error);
+        
+        // Check if this is a Gemini overload/rate limit error
+        if (isGeminiOverloadError(error)) {
+            throw new GeminiOverloadError("Gemini API is currently overloaded. Please wait a moment and try again.");
+        }
+        
         return null; // Return null on error to indicate failure
     }
 };
