@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './tailwind.js';
 
 console.log('[index.tsx] Starting app initialization...');
 
