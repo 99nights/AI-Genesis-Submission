@@ -860,6 +860,120 @@ export const verifyExpirationDates = async (
 };
 
 /**
+ * Shelf Scanning - Detect Multiple Products
+ * Scans a shelf photo and identifies all products with quantities and expiration dates
+ */
+export interface ShelfProductDetection {
+    productName: string;
+    manufacturer?: string;
+    category?: string;
+    estimatedQuantity: number;
+    visibleUnits: number;
+    expirationDate?: string;
+    expirationVisible: boolean;
+    location?: string; // Shelf position/aisle
+    confidence: number;
+    notes?: string;
+}
+
+export interface ShelfScanResult {
+    products: ShelfProductDetection[];
+    shelfFullness: number; // 0-100%
+    totalProductsDetected: number;
+    scanTimestamp: string;
+    recommendations?: string[];
+}
+
+const shelfScanSchema = {
+    type: Type.OBJECT,
+    properties: {
+        products: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    productName: { type: Type.STRING, description: "Name of the product" },
+                    manufacturer: { type: Type.STRING, description: "Manufacturer/brand name if visible" },
+                    category: { type: Type.STRING, description: "Product category (e.g., Beverages, Snacks, Dairy)" },
+                    estimatedQuantity: { type: Type.NUMBER, description: "Total estimated quantity including hidden units" },
+                    visibleUnits: { type: Type.NUMBER, description: "Number of units clearly visible" },
+                    expirationDate: { type: Type.STRING, description: "Expiration date in YYYY-MM-DD format if visible" },
+                    expirationVisible: { type: Type.BOOLEAN, description: "Whether expiration date is visible" },
+                    location: { type: Type.STRING, description: "Shelf position or location description" },
+                    confidence: { type: Type.NUMBER, description: "Confidence score from 0 to 1" },
+                    notes: { type: Type.STRING, description: "Additional observations or notes" },
+                },
+                required: ["productName", "estimatedQuantity", "visibleUnits", "expirationVisible", "confidence"],
+            },
+        },
+        shelfFullness: { type: Type.NUMBER, description: "Overall shelf fullness percentage (0-100)" },
+        totalProductsDetected: { type: Type.NUMBER, description: "Total number of different products detected" },
+        recommendations: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Recommendations based on the scan" },
+    },
+    required: ["products", "shelfFullness", "totalProductsDetected"],
+};
+
+export const scanShelfForProducts = async (
+    shelfImage: Blob,
+    knownProducts?: string[]
+): Promise<ShelfScanResult> => {
+    try {
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
+        const imagePart = await blobToGenerativePart(shelfImage);
+        
+        const knownProductsContext = knownProducts && knownProducts.length > 0
+            ? `\n\nKnown products in inventory: ${knownProducts.join(', ')}\nTry to match detected products to these names when possible.`
+            : '';
+        
+        const prompt = `Analyze this shelf photo and identify ALL products visible on the shelf.
+
+        For each product detected:
+        1. Identify the product name (match to known products if provided)
+        2. Count visible units
+        3. Estimate total quantity (including units hidden behind others)
+        4. Check for expiration dates if visible
+        5. Note shelf position/location
+        6. Assess confidence in detection
+        
+        Also provide:
+        - Overall shelf fullness percentage (0-100%)
+        - Total number of different products detected
+        - Any recommendations (e.g., restocking needed, expiration alerts)
+        
+        ${knownProductsContext}
+        
+        Return a comprehensive analysis of all products on this shelf.`;
+        
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: { parts: [imagePart, { text: prompt }] },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: shelfScanSchema,
+            },
+        });
+        
+        const parsed = JSON.parse(response.text.trim());
+        
+        return {
+            products: parsed.products || [],
+            shelfFullness: Math.max(0, Math.min(100, parsed.shelfFullness || 0)),
+            totalProductsDetected: parsed.totalProductsDetected || 0,
+            scanTimestamp: new Date().toISOString(),
+            recommendations: parsed.recommendations || [],
+        };
+    } catch (error) {
+        console.error("Error scanning shelf:", error);
+        
+        if (isGeminiOverloadError(error)) {
+            throw new GeminiOverloadError("Gemini API is currently overloaded. Please wait a moment and try again.");
+        }
+        
+        throw new Error("Failed to scan shelf for products.");
+    }
+};
+
+/**
  * Visual Insights Dashboard
  * Combine visual analysis with data analytics for actionable insights
  */

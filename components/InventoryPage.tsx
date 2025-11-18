@@ -7,6 +7,7 @@ import AnalysisPanel from './AnalysisPanel';
 import ProductDetailModal from './ProductDetailModal';
 import InventoryForm from './InventoryForm';
 import CameraCapture, { CameraScanResult, ScanProductOption } from './CameraCapture';
+import ShelfScanner from './ShelfScanner';
 import { GridViewIcon } from './icons/GridViewIcon';
 import { ListViewIcon } from './icons/ListViewIcon';
 import { ScanLineIcon } from './icons/ScanLineIcon';
@@ -38,6 +39,7 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [inventoryMode, setInventoryMode] = useState<InventoryMode>('overview');
   const [isLiveScanning, setIsLiveScanning] = useState(false);
+  const [isShelfScanning, setIsShelfScanning] = useState(false);
   const [visualSearchResults, setVisualSearchResults] = useState<StockItem[] | null>(null);
   const [isVisualSearching, setIsVisualSearching] = useState(false);
   const { showToast } = useToast();
@@ -215,6 +217,17 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
         />
       )}
 
+      {isShelfScanning && (
+        <ShelfScanner
+          summaries={summaries}
+          onScanComplete={() => {
+            setIsShelfScanning(false);
+            onDataRefresh();
+          }}
+          onClose={() => setIsShelfScanning(false)}
+        />
+      )}
+
       {isVisualScanning && (
         <CameraCapture
           onDataScanned={(result) => {
@@ -305,6 +318,17 @@ const InventoryPage: React.FC<InventoryPageProps> = ({
               <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 shadow-lg">
                 <h2 className="text-xl font-semibold mb-4 text-white">Quick Actions</h2>
                 <div className="space-y-4">
+                  <button
+                    onClick={() => setIsShelfScanning(true)}
+                    className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-cyan-600 hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 transition-all"
+                  >
+                    <CameraIcon className="w-6 h-6" />
+                    Scan Shelf
+                  </button>
+                  <p className="text-xs text-gray-400 text-center px-2">
+                    Scan entire shelf - detects all products, updates stock, shows expiration alerts
+                  </p>
+
                   <button
                     onClick={() => setIsLiveScanning(true)}
                     className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-indigo-500 transition-all"
