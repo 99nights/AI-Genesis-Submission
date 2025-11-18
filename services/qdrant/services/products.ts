@@ -38,6 +38,93 @@ export const getCanonicalProducts = async (): Promise<ProductDefinition[]> => {
   return points.map(mapPointToProductDefinition);
 };
 
+// Get canonical products for the active shop (all products that the shop has ever had in inventory)
+// This ensures shops only see/edit/delete products they have ever had in their inventory
+// Includes products even if they're currently out of stock, expired, or empty (unless manually deleted)
+// Optimized: Only fetches productIds from items and uses Qdrant filter to fetch only matching products
+export const getCanonicalProductsForShop = async (shopId?: string | null): Promise<ProductDefinition[]> => {
+  if (!qdrantClient) return [];
+  
+  const currentShopId = shopId || activeShopId;
+  if (!currentShopId) {
+    // No shop selected, return empty array (or all products if needed for scanning)
+    // For ProductCatalogPage, we want shop-specific products, so return empty
+    return [];
+  }
+
+  if (!(await ensureReadyOrWarn('items'))) return [];
+
+  // Step 1: Get ALL items for this shop (including empty/expired items) using fetchAllPoints directly
+  // This ensures we include products that the shop has ever had in inventory
+  const itemPoints = await fetchAllPoints('items', currentShopId);
+  
+  // Step 2: Extract unique productIds from items (regardless of status or quantity)
+  // Only extract productIds - we don't need full item payloads for this
+  const productIds = new Set<string>();
+  for (const point of itemPoints) {
+    const payload = point.payload as any;
+    const productId = payload?.productId;
+    if (productId && typeof productId === 'string') {
+      productIds.add(productId);
+    }
+  }
+
+  // Early exit: No items found for this shop
+  if (productIds.size === 0) {
+    return [];
+  }
+
+  // Step 3: Use Qdrant filter to fetch ONLY products matching our productIds (not all products)
+  // This is much more efficient than fetching all products and filtering in JavaScript
+  if (!(await ensureReadyOrWarn('products'))) return [];
+
+  const productIdArray = Array.from(productIds);
+  const points: any[] = [];
+  let offset: any = undefined;
+
+  // Qdrant supports 'any' for keyword fields to match multiple values
+  // This fetches only products where productId matches any of our productIds
+  const filter = {
+    must: [
+      {
+        key: 'productId',
+        match: {
+          any: productIdArray,
+        },
+      },
+    ],
+  };
+
+  do {
+    try {
+      const response = await qdrantClient.scroll('products', {
+        with_payload: true,
+        limit: 1000, // Use larger batch size for efficiency
+        offset: offset ?? undefined,
+        filter,
+      });
+
+      const batch = response?.points ?? [];
+      points.push(...batch);
+      offset = response?.next_page_offset ?? undefined;
+    } catch (scrollError: any) {
+      console.error(`[Qdrant] Scroll error in 'products' collection:`, scrollError);
+      // If filter fails, fallback to JavaScript filtering (shouldn't happen with proper indexes)
+      if (scrollError?.status === 400) {
+        console.warn('[Qdrant] Filter failed, falling back to fetching all products and filtering in JavaScript');
+        const allProducts = await getCanonicalProducts();
+        return allProducts.filter(product => productIds.has(product.id));
+      }
+      break;
+    }
+
+    if (!offset || points.length > 10_000) break; // Safety limit
+  } while (offset);
+
+  // Map points to ProductDefinition format
+  return points.map(mapPointToProductDefinition);
+};
+
 // Upsert product definition
 export const upsertProductDefinition = async (
   product: ProductDefinition,

@@ -63,4 +63,5 @@ export * from './services/dataLoader';
 
 // Re-export for backward compatibility
 export { getCanonicalProducts as fetchCanonicalProducts } from './services/products';
+export { getCanonicalProductsForShop as fetchCanonicalProductsForShop } from './services/products';
 

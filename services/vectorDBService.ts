@@ -27,6 +27,7 @@ import {
 import {
   // Services
   getCanonicalProducts,
+  getCanonicalProductsForShop,
   searchCanonicalProducts,
   upsertProductDefinition,
   createCanonicalProduct,
@@ -352,6 +353,7 @@ export type { QdrantLogEntry, ActiveShopContextType };
 // Re-export all product functions
 export {
   getCanonicalProducts,
+  getCanonicalProductsForShop,
   searchCanonicalProducts,
   upsertProductDefinition,
   createCanonicalProduct,
@@ -361,6 +363,7 @@ export {
 
 // Alias for backward compatibility
 export const fetchCanonicalProducts = getCanonicalProducts;
+export const fetchCanonicalProductsForShop = getCanonicalProductsForShop;
 export const searchCatalogProducts = searchCanonicalProducts;
 
 // Re-export all batch functions

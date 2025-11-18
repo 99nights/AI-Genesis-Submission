@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ProductDefinition, ProductImage } from '../types';
-import { createCanonicalProduct, updateCanonicalProduct, deleteCanonicalProduct, fetchCanonicalProducts, fetchSuppliersForActiveShop } from '../services/vectorDBService';
+import { createCanonicalProduct, updateCanonicalProduct, deleteCanonicalProduct, fetchCanonicalProductsForShop, fetchSuppliersForActiveShop } from '../services/vectorDBService';
 import { useToast } from './Toast';
 import ProductLearningScanner from './ProductLearningScanner';
 import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
@@ -32,7 +32,7 @@ const ProductCatalogPage: React.FC = () => {
     setError(null);
     try {
       const [list, supplierList] = await Promise.all([
-        fetchCanonicalProducts(),
+        fetchCanonicalProductsForShop(), // Only show products that this shop has in inventory
         fetchSuppliersForActiveShop(),
       ]);
       setProducts(list);
