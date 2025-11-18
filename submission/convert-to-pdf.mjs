@@ -33,6 +33,7 @@ async function convertWithPuppeteer() {
     await page.pdf({
       path: pdfFile,
       format: 'A4',
+      landscape: true,
       printBackground: true,
       margin: {
         top: '2cm',

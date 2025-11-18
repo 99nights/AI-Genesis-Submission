@@ -47,33 +47,12 @@ export const loadDataFromQdrant = async (): Promise<void> => {
 
   console.log(`[DataLoader] Fetched from Qdrant: ${itemPoints.length} items, ${productPoints.length} products, ${batchPoints.length} batches`);
 
-  // If no items found, check what shopIds actually exist in Qdrant
+  // Removed expensive fallback that loads ALL items just to check shopIds
+  // This was causing severe performance issues - loading all items from the entire collection
+  // If no items are found, it's likely the shopId is correct but there's simply no data
+  // Users can check the logs if they suspect a data issue
   if (itemPoints.length === 0) {
-    console.warn(`[DataLoader] No items found for shopId: ${shopIdString}. Checking all items in Qdrant...`);
-    try {
-      const allItems = await fetchAllPoints('items', null);
-      const shopIdsInItems = new Set<string>();
-      allItems.forEach((point: any) => {
-        const itemShopId = point.payload?.shopId;
-        // Handle both string and object cases
-        const shopIdStr = typeof itemShopId === 'string' 
-          ? itemShopId 
-          : (itemShopId && typeof itemShopId === 'object' && 'id' in itemShopId)
-            ? itemShopId.id
-            : null;
-        if (shopIdStr) {
-          shopIdsInItems.add(shopIdStr);
-        }
-      });
-      console.warn(`[DataLoader] Found ${allItems.length} total items in Qdrant. ShopIds present:`, Array.from(shopIdsInItems));
-      if (allItems.length > 0 && !shopIdsInItems.has(shopIdString)) {
-        console.error(`[DataLoader] CRITICAL: Items exist but none have shopId "${shopIdString}". Items have shopIds:`, Array.from(shopIdsInItems));
-        console.error(`[DataLoader] Expected shopId: ${shopIdString}`);
-        console.error(`[DataLoader] Found shopIds:`, Array.from(shopIdsInItems));
-      }
-    } catch (err) {
-      console.error('[DataLoader] Error checking all items:', err);
-    }
+    console.warn(`[DataLoader] No items found for shopId: ${shopIdString}. This may be normal if the shop has no inventory yet.`);
   }
 
   clearAllCaches();

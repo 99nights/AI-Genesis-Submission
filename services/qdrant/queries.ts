@@ -5,19 +5,15 @@
  */
 
 import { qdrantClient, CollectionKey, activeShopId } from './core';
-import { ensureReadyOrWarn } from './collections';
+import { ensureReadyOrWarn, isCollectionReady } from './collections';
 
 const buildShopFilterCondition = (
   collection: CollectionKey,
   shopIdString: string | null,
 ) => {
   if (!shopIdString) return null;
-  // For 'items' collection, we'll use JavaScript filtering instead of nested filters
-  // since Qdrant nested filters may not be supported
-  if (collection === 'items') {
-    // Return null to trigger JavaScript filtering fallback
-    return null;
-  }
+  // Try native Qdrant filtering for all collections including 'items'
+  // This is much more efficient than JavaScript filtering
   return { key: 'shopId', match: { value: shopIdString } };
 };
 
@@ -28,7 +24,11 @@ export const fetchAllPoints = async (
 ): Promise<any[]> => {
   if (!qdrantClient) return [];
 
-  if (!(await ensureReadyOrWarn(collection))) return [];
+  // Use synchronous check first - avoid async overhead if collection is already ready
+  // Only call ensureReadyOrWarn if collection state is unknown
+  if (!isCollectionReady(collection)) {
+    if (!(await ensureReadyOrWarn(collection))) return [];
+  }
 
   const points: any[] = [];
   let offset: any = undefined;
@@ -48,49 +48,19 @@ export const fetchAllPoints = async (
     }
   }
   
-  // For 'items' collection with shopId, use JavaScript filtering to avoid nested filter issues
-  if (shopIdString && collection === 'items') {
-    // Fetch all items without filter, then filter in JavaScript
-    const allPoints: any[] = [];
-    let allOffset: any = undefined;
-    do {
-      try {
-        const allResponse = await qdrantClient.scroll(collection, {
-          with_payload: true,
-          limit: 100,
-          offset: allOffset ?? undefined,
-        });
-        allPoints.push(...(allResponse?.points ?? []));
-        allOffset = allResponse?.next_page_offset ?? undefined;
-      } catch (err) {
-        console.error('[Qdrant] Error fetching items for JavaScript filter:', err);
-        break;
-      }
-    } while (allOffset);
-    
-    // Filter in JavaScript
-    const filtered = allPoints.filter((point: any) => {
-      const itemShopId = point.payload?.shopId;
-      if (typeof itemShopId === 'string') {
-        return itemShopId === shopIdString;
-      } else if (itemShopId && typeof itemShopId === 'object' && 'id' in itemShopId) {
-        return itemShopId.id === shopIdString;
-      }
-      return false;
-    });
-    
-    return filtered;
-  }
-  
-  // For other collections, use Qdrant filter
+  // Use Qdrant native filtering for all collections (including 'items')
+  // This is MUCH more efficient than fetching all data and filtering in JavaScript
   const shopCondition = buildShopFilterCondition(collection, shopIdString);
   const filter = shopCondition ? { must: [shopCondition] } : undefined;
+
+  // Use larger batch size to reduce number of API requests (critical for performance)
+  const SCROLL_LIMIT = 1000; // Increased from 100 to reduce API calls
 
   do {
     try {
       const response = await qdrantClient.scroll(collection, {
         with_payload: true,
-        limit: 100,
+        limit: SCROLL_LIMIT,
         offset: offset ?? undefined,
         filter,
       });
@@ -99,6 +69,49 @@ export const fetchAllPoints = async (
       points.push(...batch);
       offset = response?.next_page_offset ?? undefined;
     } catch (scrollError: any) {
+      // If filter fails with 400 error and we have a shopId filter, 
+      // it might be a filter syntax issue - log and try without filter as last resort
+      if (scrollError?.status === 400 && shopIdString && collection === 'items' && retries > 0) {
+        console.warn(
+          `[Qdrant] Filter failed for 'items' collection with shopId filter. ` +
+          `This may indicate a data structure issue. Error: ${scrollError.message}`
+        );
+        
+        // As a last resort, try JavaScript filtering only if native filter completely fails
+        // This should rarely happen if the collection is properly indexed
+        console.warn(`[Qdrant] Falling back to JavaScript filtering for 'items' collection (inefficient)`);
+        
+        const allPoints: any[] = [];
+        let allOffset: any = undefined;
+        do {
+          try {
+            const allResponse = await qdrantClient.scroll(collection, {
+              with_payload: true,
+              limit: SCROLL_LIMIT,
+              offset: allOffset ?? undefined,
+            });
+            allPoints.push(...(allResponse?.points ?? []));
+            allOffset = allResponse?.next_page_offset ?? undefined;
+          } catch (err) {
+            console.error('[Qdrant] Error in JavaScript filter fallback:', err);
+            break;
+          }
+        } while (allOffset);
+        
+        // Filter in JavaScript as last resort
+        const filtered = allPoints.filter((point: any) => {
+          const itemShopId = point.payload?.shopId;
+          if (typeof itemShopId === 'string') {
+            return itemShopId === shopIdString;
+          } else if (itemShopId && typeof itemShopId === 'object' && 'id' in itemShopId) {
+            return itemShopId.id === shopIdString;
+          }
+          return false;
+        });
+        
+        return filtered;
+      }
+      
       console.error(
         `[Qdrant] Scroll error in '${collection}' (Retry ${retries}, Filter: ${JSON.stringify(filter)}):`,
         scrollError
@@ -132,7 +145,10 @@ export const searchWithFilters = async (
   limit: number = 10
 ): Promise<any[]> => {
   if (!qdrantClient) return [];
-  if (!(await ensureReadyOrWarn(collection))) return [];
+  // Use synchronous check first - avoid async overhead if collection is already ready
+  if (!isCollectionReady(collection)) {
+    if (!(await ensureReadyOrWarn(collection))) return [];
+  }
 
   const mustFilters: any[] = [];
 
