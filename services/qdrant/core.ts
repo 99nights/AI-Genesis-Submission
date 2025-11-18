@@ -43,8 +43,18 @@ const normalizeQdrantUrl = (raw?: string | null): string | null => {
     trimmed = trimmed.slice(0, -1);
   }
   
+<<<<<<< HEAD
   // If URL doesn't have a protocol, it's relative - convert to absolute
   // This happens in production when vite.config.ts sets QDRANT_URL to '/qdrant'
+=======
+  // Detect and warn about localhost:6333 (default Qdrant port) - this won't work in production
+  if (trimmed.includes(':6333') || trimmed.includes('localhost:6333') || trimmed.includes('127.0.0.1:6333')) {
+    console.warn('[Qdrant Core] Detected port 6333 in URL - this is the default Qdrant port and may not work in production:', trimmed);
+  }
+  
+  // If the URL doesn't start with http:// or https://, it's a relative URL
+  // Convert it to an absolute URL using the current origin
+>>>>>>> 98579f9 (fix wrong port forwarding)
   if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
     // In browser, use window.location.origin to get the full URL
     if (typeof window !== 'undefined' && window.location) {
@@ -87,9 +97,24 @@ const getRawQdrantUrl = (): string | null => {
          'http://localhost:8787/qdrant';
 };
 
-// Initialize Qdrant client with proper URL resolution
-// Use a function to ensure window.location is available when called
+// Lazy initialization - create client only when first accessed
+// This ensures window.location is always available when the URL is normalized
+let _qdrantClient: QdrantClient | null = null;
+let _initializationAttempted = false;
+
 const initializeQdrantClient = (): QdrantClient | null => {
+  // If already initialized, return it
+  if (_qdrantClient) {
+    return _qdrantClient;
+  }
+
+  // If we've already tried and failed, don't retry
+  if (_initializationAttempted) {
+    return null;
+  }
+
+  _initializationAttempted = true;
+
   const rawUrl = getRawQdrantUrl();
   const normalizedUrl = normalizeQdrantUrl(rawUrl);
   
@@ -108,16 +133,45 @@ const initializeQdrantClient = (): QdrantClient | null => {
     // Validate URL format
     new URL(normalizedUrl);
     console.log('[Qdrant Core] Initializing Qdrant client with URL:', normalizedUrl);
-    return new QdrantClient({ url: normalizedUrl });
+    _qdrantClient = new QdrantClient({ url: normalizedUrl });
+    return _qdrantClient;
   } catch (error) {
     console.error('[Qdrant Core] Failed to create Qdrant client - invalid URL:', normalizedUrl, error);
     return null;
   }
 };
 
-// Initialize the client - this will be called when the module loads
-// In browser, window.location should be available by the time this module is imported
-export const qdrantClient = initializeQdrantClient();
+// Export a proxy that lazily initializes the client on first access
+// This ensures window.location is available when URL normalization happens
+export const qdrantClient = new Proxy({} as QdrantClient | null, {
+  get(target, prop) {
+    const client = initializeQdrantClient();
+    if (!client) {
+      return undefined;
+    }
+    // Forward all property access to the actual client
+    const value = (client as any)[prop];
+    // If it's a function, bind it to the client
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+  has(target, prop) {
+    const client = initializeQdrantClient();
+    if (!client) {
+      return false;
+    }
+    return prop in client;
+  },
+  ownKeys(target) {
+    const client = initializeQdrantClient();
+    if (!client) {
+      return [];
+    }
+    return Object.keys(client);
+  }
+}) as QdrantClient | null;
 
 // Active shop context (shared state)
 export let activeShopId: string | null = null;
