@@ -282,12 +282,17 @@ if (NODE_ENV === 'production') {
   app.use(express.static(distPath));
   
   // Handle SPA routing - serve index.html for all non-API routes
-  app.get('*', (req, res) => {
+  app.use((req, res, next) => {
     // Don't serve index.html for API routes
     if (req.path.startsWith('/api') || req.path.startsWith('/qdrant') || req.path === '/healthz') {
-      return res.status(404).json({ error: 'Not found' });
+      return next();
     }
-    res.sendFile(join(distPath, 'index.html'));
+    // Only handle GET requests for SPA routing
+    if (req.method === 'GET') {
+      res.sendFile(join(distPath, 'index.html'));
+    } else {
+      next();
+    }
   });
 }
 
