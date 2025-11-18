@@ -1,0 +1,1388 @@
+
+> autonomous-shop-inventory-ai@0.0.0 proxy
+> node server/proxy.js
+
+[dotenv@17.2.3] injecting env (3) from .env.proxy -- tip: ⚙️  enable debug logging with { debug: true }
+[Qdrant Proxy] Listening on port 8787, forwarding to https://50961a99-0d4f-4619-b8cb-8cfb38033826.europe-west3-0.gcp.cloud.qdrant.io
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/batches/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/items/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → PUT /collections/batches/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/items/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] → POST /collections/shops/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/sales/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/inventory
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] → GET /collections/users
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/suppliers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/items
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/shops
+[Qdrant Proxy] → GET /collections/customers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/products
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/batches
+[Qdrant Proxy] → GET /collections/sales
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/marketplace
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → GET /collections/visual
+[Qdrant Proxy] → GET /collections/drivers
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → PUT /collections/users/points?wait=true points=1 vectorLen=768
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/products/points/scroll
+[Qdrant Proxy] → POST /collections/batches/points/scroll
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] → POST /collections/sales/points/scroll
+[Qdrant Proxy] → POST /collections/marketplace/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/items/points/scroll
+[Qdrant Proxy] ← 400 Bad Request | {"status":{"error":"Format error in JSON body: Expected some form of condition, which can be a field condition (like {\"key\": ..., \"match\": ... }), or some other mentioned in the documentation: https://qdrant.tech/documentation/concepts/filtering/#filtering-conditions at line 1 column 256"},"time":0.0}
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] → POST /collections/suppliers/points/scroll
+[Qdrant Proxy] ← 200
+[Qdrant Proxy] ← 200

@@ -1,0 +1,185 @@
+/**
+ * Query Utilities
+ * 
+ * Common query patterns and data fetching utilities.
+ */
+
+import { qdrantClient, CollectionKey, activeShopId } from './core';
+import { ensureReadyOrWarn } from './collections';
+
+const buildShopFilterCondition = (
+  collection: CollectionKey,
+  shopIdString: string | null,
+) => {
+  if (!shopIdString) return null;
+  // For 'items' collection, we'll use JavaScript filtering instead of nested filters
+  // since Qdrant nested filters may not be supported
+  if (collection === 'items') {
+    // Return null to trigger JavaScript filtering fallback
+    return null;
+  }
+  return { key: 'shopId', match: { value: shopIdString } };
+};
+
+// Fetch all points from a collection (with optional shop filter)
+export const fetchAllPoints = async (
+  collection: CollectionKey,
+  shopFilter: string | null | { id?: string } | undefined
+): Promise<any[]> => {
+  if (!qdrantClient) return [];
+
+  if (!(await ensureReadyOrWarn(collection))) return [];
+
+  const points: any[] = [];
+  let offset: any = undefined;
+  let retries = 3;
+  
+  // Extract shopId string from shopFilter (handle both string and object cases)
+  let shopIdString: string | null = null;
+  if (shopFilter) {
+    if (typeof shopFilter === 'string') {
+      shopIdString = shopFilter;
+    } else if (typeof shopFilter === 'object' && shopFilter !== null && 'id' in shopFilter) {
+      const obj = shopFilter as { id: string };
+      shopIdString = obj.id || null;
+      console.warn(`[Qdrant] fetchAllPoints received shopFilter as object instead of string. Extracted id: ${shopIdString}`);
+    } else {
+      console.warn(`[Qdrant] fetchAllPoints received invalid shopFilter type: ${typeof shopFilter}`);
+    }
+  }
+  
+  // For 'items' collection with shopId, use JavaScript filtering to avoid nested filter issues
+  if (shopIdString && collection === 'items') {
+    // Fetch all items without filter, then filter in JavaScript
+    const allPoints: any[] = [];
+    let allOffset: any = undefined;
+    do {
+      try {
+        const allResponse = await qdrantClient.scroll(collection, {
+          with_payload: true,
+          limit: 100,
+          offset: allOffset ?? undefined,
+        });
+        allPoints.push(...(allResponse?.points ?? []));
+        allOffset = allResponse?.next_page_offset ?? undefined;
+      } catch (err) {
+        console.error('[Qdrant] Error fetching items for JavaScript filter:', err);
+        break;
+      }
+    } while (allOffset);
+    
+    // Filter in JavaScript
+    const filtered = allPoints.filter((point: any) => {
+      const itemShopId = point.payload?.shopId;
+      if (typeof itemShopId === 'string') {
+        return itemShopId === shopIdString;
+      } else if (itemShopId && typeof itemShopId === 'object' && 'id' in itemShopId) {
+        return itemShopId.id === shopIdString;
+      }
+      return false;
+    });
+    
+    return filtered;
+  }
+  
+  // For other collections, use Qdrant filter
+  const shopCondition = buildShopFilterCondition(collection, shopIdString);
+  const filter = shopCondition ? { must: [shopCondition] } : undefined;
+
+  do {
+    try {
+      const response = await qdrantClient.scroll(collection, {
+        with_payload: true,
+        limit: 100,
+        offset: offset ?? undefined,
+        filter,
+      });
+
+      const batch = response?.points ?? [];
+      points.push(...batch);
+      offset = response?.next_page_offset ?? undefined;
+    } catch (scrollError: any) {
+      console.error(
+        `[Qdrant] Scroll error in '${collection}' (Retry ${retries}, Filter: ${JSON.stringify(filter)}):`,
+        scrollError
+      );
+      
+      if (scrollError?.status === 400 && retries > 0) {
+        console.info(`[Qdrant] Retrying scroll in '${collection}'...`);
+        retries--;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        continue;
+      }
+      offset = undefined; // Break
+    }
+
+    if (!offset || points.length > 100_000) break;
+  } while (offset);
+
+  return points;
+};
+
+// Search with filters (for semantic search)
+export const searchWithFilters = async (
+  collection: CollectionKey,
+  vector: number[] | { name: string; vector: number[] },
+  filters: {
+    shopId?: string;
+    status?: string;
+    quantityMin?: number;
+    [key: string]: any;
+  },
+  limit: number = 10
+): Promise<any[]> => {
+  if (!qdrantClient) return [];
+  if (!(await ensureReadyOrWarn(collection))) return [];
+
+  const mustFilters: any[] = [];
+
+  if (filters.shopId) {
+    // Extract shopId string (handle both string and object cases)
+    const shopIdString = typeof filters.shopId === 'string' 
+      ? filters.shopId 
+      : (filters.shopId && typeof filters.shopId === 'object' && filters.shopId !== null && 'id' in filters.shopId)
+        ? (filters.shopId as { id: string }).id
+        : null;
+    
+    if (shopIdString) {
+      const shopCondition = buildShopFilterCondition(collection, shopIdString);
+      if (shopCondition) {
+        mustFilters.push(shopCondition);
+      }
+    }
+  }
+
+  if (filters.status) {
+    mustFilters.push({ key: 'status', match: { value: filters.status } });
+  }
+
+  if (filters.quantityMin !== undefined) {
+    mustFilters.push({ key: 'quantity', range: { gt: filters.quantityMin } });
+  }
+
+  // Add any additional filters
+  Object.entries(filters).forEach(([key, value]) => {
+    if (!['shopId', 'status', 'quantityMin'].includes(key) && value !== undefined) {
+      mustFilters.push({ key, match: { value } });
+    }
+  });
+
+  try {
+    const response = await qdrantClient.search(collection, {
+      vector,
+      limit,
+      with_payload: true,
+      filter: mustFilters.length > 0 ? { must: mustFilters } : undefined,
+    });
+
+    const points = Array.isArray(response) ? response : (response as any)?.points ?? [];
+    return points;
+  } catch (error: any) {
+    console.error(`[Qdrant] Search failed in '${collection}':`, error);
+    return [];
+  }
+};
+
