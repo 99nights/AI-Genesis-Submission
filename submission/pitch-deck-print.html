@@ -21,16 +21,19 @@
         
         .slide {
             page-break-after: always;
-            padding: 2cm;
-            min-height: 18cm;
+            page-break-inside: avoid;
+            padding: 1cm;
+            min-height: 14cm;
+            max-height: 18cm;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             position: relative;
+            overflow: hidden;
         }
         
         .slide:last-child {
-            page-break-after: auto;
+            page-break-after: avoid;
         }
         
         h1 {
@@ -121,17 +124,26 @@
         @media print {
             .slide {
                 page-break-after: always;
+                page-break-inside: avoid;
+            }
+            .slide:last-child {
+                page-break-after: avoid;
             }
         }
     </style>
 </head>
 <body>
+
+    <div class="slide">
+        <h1 style="text-align: center; margin-top: 6cm;">Shop Nexus</h1>
+        <h2 style="text-align: center; margin-top: 2cm;">The AI System for Autonomous Retail?</h2>
+    </div>
+
     <!-- Slide 1: The Problem -->
     <div class="slide">
         <h1>The Problem</h1>
         <p><strong>Independent 24/7 shops waste 20-40 hours/week on manual inventory management.</strong></p>
         <p>Operators spend countless hours counting shelves, tracking expiration dates, and reconciling stock levels. A typical 150m² shop loses €40-80K/year to waste and inefficiency. Existing solutions are built for large chains—too expensive and complex for independent operators.</p>
-        <div class="slide-number">Slide 1</div>
     </div>
 
     <!-- Slide 2: The Solution -->
@@ -139,7 +151,6 @@
         <h1>The Solution</h1>
         <p><strong>ShopNexus: The AI operating system that makes 24/7 shops truly autonomous.</strong></p>
         <p>We eliminate manual inventory work through real-time OCR scanning, intelligent waste prevention, and peer-to-peer marketplace connectivity. ShopNexus cuts management time by <span class="stat">85%</span> and reduces waste by <span class="stat">35-60%</span>, turning independent shops into profitable, hands-off operations.</p>
-        <div class="slide-number">Slide 2</div>
     </div>
 
     <!-- Slide 3: How It Works - Core Technology -->
@@ -147,7 +158,6 @@
         <h1>How It Works - Core Technology</h1>
         <p><strong>Multi-modal AI powered by Google Gemini processes images in real-time.</strong></p>
         <p>Our system uses <code>gemini-2.5-flash</code> for fast OCR and product identification, plus <code>gemini-2.5-pro</code> for advanced inventory analysis. Camera-based scanning automatically extracts product data, expiration dates, and stock levels without manual entry. Qdrant vector database enables semantic search and RAG-powered natural language queries.</p>
-        <div class="slide-number">Slide 3</div>
     </div>
 
     <!-- Slide 4: How It Works - Vector Intelligence -->
@@ -155,7 +165,6 @@
         <h1>How It Works - Vector Intelligence</h1>
         <p><strong>Qdrant vector database powers intelligent product matching and insights.</strong></p>
         <p>Our architecture uses 10+ specialized collections for products, inventory, batches, and marketplace listings. Semantic search enables operators to ask questions like "Show me products expiring this week within 5km" and get instant, accurate answers. Visual feature learning improves scan accuracy over time.</p>
-        <div class="slide-number">Slide 4</div>
     </div>
 
     <!-- Slide 5: User Experience -->
@@ -163,7 +172,6 @@
         <h1>User Experience</h1>
         <p class="highlight">[Screen Recording: Live Demo of ShopNexus in Action]</p>
         <p>Watch as an operator scans a shelf with their phone—products are instantly identified, stock levels updated, and expiration alerts generated. The interface shows real-time inventory, waste predictions, and marketplace opportunities. Natural language queries provide instant business insights without complex dashboards.</p>
-        <div class="slide-number">Slide 5</div>
     </div>
 
     <!-- Slide 6: Market Opportunity - TAM -->
@@ -171,7 +179,6 @@
         <h1>Market Opportunity - TAM</h1>
         <p><strong>Total Addressable Market: <span class="stat">$957B</span> global convenience channel, growing to <span class="stat">$1.4T</span> by 2033.</strong></p>
         <p>The autonomous/unmanned retail segment represents <span class="stat">$82.56B</span> in 2025, growing at <span class="stat">24.7% CAGR</span> to <span class="stat">$600B+</span> by 2034. Retail automation market is $27-30B today, heading to $64-74B by 2032. Food waste alone costs retailers billions annually—even 5% waste reduction represents tens of billions in saved margin.</p>
-        <div class="slide-number">Slide 6</div>
     </div>
 
     <!-- Slide 7: Market Opportunity - SAM -->
@@ -179,7 +186,6 @@
         <h1>Market Opportunity - SAM</h1>
         <p><strong>Serviceable Addressable Market: <span class="stat">400,000+</span> independent 24/7 shops in Europe and Asia.</strong></p>
         <p>Our target: small-format autonomous stores (Spätis, kiosks, unmanned convenience) that need affordable, integrated solutions. Europe and Asia will add tens of thousands of these units in the next 5 years. At €299/month average subscription, SAM represents <span class="stat">€1.2B+</span> annual recurring revenue potential.</p>
-        <div class="slide-number">Slide 7</div>
     </div>
 
     <!-- Slide 8: Revenue Streams -->
@@ -187,7 +193,6 @@
         <h1>Revenue Streams</h1>
         <p><strong>Three revenue streams: SaaS subscriptions, marketplace fees, and hardware partnerships.</strong></p>
         <p>Tiered SaaS: <span class="stat">€199-€499/month</span> per store based on size and features. Marketplace transaction fees: <span class="stat">4-6%</span> on peer-to-peer stock trades (high margin). Optional premium hardware partnerships with revenue share. Average shop generates <span class="stat">€4K/month</span> in savings—pays for itself in <span class="stat">6 weeks</span>.</p>
-        <div class="slide-number">Slide 8</div>
     </div>
 
     <!-- Slide 9: Competitive Landscape -->
@@ -195,7 +200,6 @@
         <h1>Competitive Landscape</h1>
         <p><strong>Enterprise players serve chains; mid-market lacks AI; hardware-only solutions are expensive.</strong></p>
         <p>Blue Yonder, Oracle, SAP target million-euro chain contracts. Lightspeed, Vend offer basic POS without computer vision or waste prevention. AiFi, Grabango sell expensive camera systems to large operators. No one offers full vertical integration for autonomous SMB retail at an affordable price point.</p>
-        <div class="slide-number">Slide 9</div>
     </div>
 
     <!-- Slide 10: Our Unique Selling Proposition -->
@@ -203,7 +207,6 @@
         <h1>Our Unique Selling Proposition</h1>
         <p><strong>We're the only platform combining real-time OCR, RAG intelligence, and peer-to-peer marketplace at SMB price point.</strong></p>
         <p>Full vertical integration: inventory, POS, waste prevention, and network marketplace in one subscription. AI-powered insights accessible through natural language—no complex training required. Network effects create local supply meshes that reduce waste by <span class="stat">40-60%</span> additional. We own the "autonomous SMB retail OS + local supply mesh" position.</p>
-        <div class="slide-number">Slide 10</div>
     </div>
 
     <!-- Slide 11: Unit Economics & ROI -->
@@ -211,7 +214,6 @@
         <h1>Unit Economics & ROI</h1>
         <p><strong>Customers see <span class="stat"><2 month</span> payback with average savings of <span class="stat">€4K/month</span> per shop.</strong></p>
         <p>Waste reduction saves <span class="stat">€3-5K/month</span>. Time savings (30 hours/week) worth <span class="stat">€3K+/month</span>. Network revenue upside adds <span class="stat">€1-3K</span> extra margin/month. Total value: <span class="stat">€7-11K/month</span> savings vs. <span class="stat">€299/month</span> cost. Clear path to profitability for both customers and ShopNexus.</p>
-        <div class="slide-number">Slide 11</div>
     </div>
 
     <!-- Slide 12: Go-to-Market Strategy -->
@@ -219,7 +221,6 @@
         <h1>Go-to-Market Strategy</h1>
         <p><strong>Phase 1 (2026): Launch in DACH region with <span class="stat">50-100</span> pilot stores already in negotiation.</strong></p>
         <p>Germany, Austria, Switzerland have highest density of 24/7 Spätis and strongest autonomous store roll-out. Phase 2 expands to Poland, Sweden, Benelux, Japan, and South Korea. Target: <span class="stat">1,000 shops</span> in 18 months, reaching <span class="stat">€5M ARR</span> and proving network flywheel effects.</p>
-        <div class="slide-number">Slide 12</div>
     </div>
 
     <!-- Slide 13: Future Prospects - Scalability -->
@@ -227,7 +228,6 @@
         <h1>Future Prospects - Scalability</h1>
         <p><strong>Network effects create exponential value as more shops join the platform.</strong></p>
         <p>Each new shop increases marketplace liquidity and reduces waste across the network. At <span class="stat">15-20 shops</span> per city, marketplace activates—waste drops another <span class="stat">40-60%</span>. Scalable architecture handles thousands of shops with Qdrant vector database and cloud infrastructure. Platform becomes more valuable with each participant.</p>
-        <div class="slide-number">Slide 13</div>
     </div>
 
     <!-- Slide 14: Future Prospects - Impact -->
@@ -235,7 +235,6 @@
         <h1>Future Prospects - Impact</h1>
         <p><strong>Vision: <span class="stat">50,000+</span> shops across Europe and Asia by 2030, moving billions in network volume.</strong></p>
         <p>ShopNexus becomes the de-facto operating layer for independent 24/7 convenience segment. Waste approaches zero through predictive systems and network optimization. Profitability never seen before in the segment. We're building the "Linux of autonomous retail"—open for hardware partners, closed enough to own the network.</p>
-        <div class="slide-number">Slide 14</div>
     </div>
 
     <!-- Slide 15: The Opportunity -->
@@ -243,13 +242,11 @@
         <h1>The Opportunity</h1>
         <p><strong>AI, computer vision, and network effects converge in an <span class="stat">$80B+</span> high-growth segment that's completely underserved.</strong></p>
         <p>This is the rare intersection where technology meets real-world business value. Independent shop owners desperately need solutions built for them, not adapted from enterprise systems. ShopNexus delivers measurable ROI from day one while building network effects that create sustainable competitive moats.</p>
-        <div class="slide-number">Slide 15</div>
     </div>
 
     <!-- Slide 16: Thank You -->
     <div class="slide">
         <h1 style="text-align: center; margin-top: 6cm;">Thank You</h1>
-        <h2 style="text-align: center; margin-top: 2cm;">Questions?</h2>
         <p style="text-align: center; margin-top: 3cm; font-size: 1.5em;">
             <strong>ShopNexus</strong><br>
             The AI Operating System for Autonomous Retail

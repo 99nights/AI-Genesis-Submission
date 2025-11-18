@@ -30,6 +30,7 @@ async function convertWithPuppeteer() {
       format: 'A4',
       landscape: true,
       printBackground: true,
+      preferCSSPageSize: false,
       margin: {
         top: '2cm',
         right: '2cm',
