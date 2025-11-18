@@ -2,46 +2,182 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# ShopNexus - Autonomous Shop Inventory AI
 
-This contains everything you need to run your app locally.
+**The all-in-one AI operating system for small and medium-sized 24/7 self-service and autonomous convenience shops.**
 
 View your app in AI Studio: https://ai.studio/apps/drive/1LtQRJKm9IrJ1BjwdKg7vF9dUURDdu4zE
 
-## Run Locally
+---
 
-**Prerequisites:**  Node.js
+## 📋 Table of Contents
 
+- [Setup Instructions](#-setup-instructions)
+- [The Idea](#-the-idea)
+- [Technology Stack](#-technology-stack)
+- [Architecture](#-architecture)
+- [Implementation Details](#-implementation-details)
+- [Future Outlook & Vision](#-future-outlook--vision)
+- [Documentation](#-documentation)
 
-1. Install dependencies:
-   `npm install`
-2. Set environment variables:
-   - `.env.local` → UI config (Gemini key, proxy URL, collection names, Supabase keys for auth). Example values are included.
-   - `.env.proxy` → **server-side only**. Contains your real Qdrant Cloud endpoint + API key. Copy [.env.proxy.example](.env.proxy.example) and fill it with your credentials (keep it out of version control).
-   - Supabase: add `SUPABASE_URL` and `SUPABASE_ANON_KEY` to `.env.local`. Supabase now powers only the shop login/registration flow.
-3. Create your Supabase schema:
-   - Run the SQL in [supabase/schema.sql](supabase/schema.sql) (or paste it into the Supabase SQL editor). It provisions the `shops` table used for authentication (username, email, password hash, and the generated Qdrant namespace).
-   - When inserting a shop row manually, hash the password with:
+---
+
+## 🚀 Setup Instructions
+
+### Prerequisites
+
+- **Node.js** (v18 or higher recommended)
+- **npm** or **yarn**
+- Accounts for:
+  - [Supabase](https://supabase.com) (free tier available)
+  - [Qdrant Cloud](https://cloud.qdrant.io) (free tier available)
+  - [Google AI Studio](https://aistudio.google.com) (for Gemini API key)
+
+### Step 1: Get API Keys
+
+#### 1.1 Get Supabase API Keys
+
+1. Go to [Supabase](https://supabase.com) and create a free account
+2. Create a new project
+3. Navigate to **Settings** → **API**
+4. Copy your:
+   - **Project URL** (`SUPABASE_URL`)
+   - **anon/public key** (`SUPABASE_ANON_KEY`)
+
+#### 1.2 Get Qdrant Cloud Keys
+
+1. Go to [Qdrant Cloud](https://cloud.qdrant.io) and sign up
+2. Create a new cluster (free tier: 1GB storage)
+3. Once created, copy:
+   - **Cluster URL** (e.g., `https://xxxxx-xxxxx.qdrant.io`) → This is your `QDRANT_UPSTREAM_URL`
+   - **API Key** → This is your `QDRANT_API_KEY`
+
+⚠️ **Important**: The cluster URL must be your Qdrant Cloud URL (NOT localhost). Railway and Vercel block localhost connections.
+
+#### 1.3 Get Google Gemini API Key
+
+1. Go to [Google AI Studio](https://aistudio.google.com)
+2. Sign in with your Google account
+3. Click **Get API Key** and create a new API key
+4. Copy the API key → This is your `GEMINI_API_KEY`
+
+### Step 2: Configure Environment Variables
+
+1. **Create `.env.local` file** in the project root:
+   ```bash
+   # Google Gemini API
+   GEMINI_API_KEY=your_gemini_api_key_here
+   
+   # Supabase Configuration
+   SUPABASE_URL=your_supabase_project_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # Qdrant Configuration (for frontend)
+   QDRANT_URL=/qdrant
+   QDRANT_PROXY_URL=http://localhost:8787/qdrant
+   QDRANT_COLLECTION=product_visual_features
+   QDRANT_PRODUCTS_COLLECTION=products
+   QDRANT_BATCHES_COLLECTION=batches
+   QDRANT_STOCK_ITEMS_COLLECTION=stock_items
+   QDRANT_SALES_COLLECTION=sales_transactions
+   ```
+
+2. **Create `.env.proxy` file** in the project root:
+   ```bash
+   # Qdrant Cloud Configuration (for backend proxy)
+   QDRANT_UPSTREAM_URL=https://xxxxx-xxxxx.qdrant.io
+   QDRANT_API_KEY=your_qdrant_api_key_here
+   QDRANT_PRODUCTS_COLLECTION=products
+   QDRANT_VECTOR_NAME=embedding
+   QDRANT_VECTOR_SIZE=768
+   QDRANT_PROXY_LOG=summary
+   ```
+
+### Step 3: Set Up Database Schemas
+
+#### 3.1 Set Up Supabase Schema
+
+1. Go to your Supabase project dashboard
+2. Navigate to **SQL Editor**
+3. Copy and paste the entire contents of [`supabase/schema.sql`](supabase/schema.sql)
+4. Click **Run** to execute the SQL script
+
+This creates:
+- `users` table for authentication
+- `products`, `batches`, `stock_items`, `sales` tables (for legacy compatibility)
+- `dan_keys`, `dan_events`, `dan_audit`, `dan_policies` tables for DAN functionality
+- Row Level Security (RLS) policies
+
+#### 3.2 Set Up Qdrant Collections
+
+Run the Qdrant setup script to create all collections and indexes:
+
+```bash
+# Setup all collections (recommended for first-time setup)
+npm run setup:qdrant
+
+# Or recreate all collections (WARNING: deletes existing data)
+npm run setup:qdrant:recreate
+
+# Or setup specific collections
+node scripts/setupQdrant.mjs --collections=items,products,batches
+```
+
+This script will:
+- Create all required collections (`users`, `shops`, `products`, `items`, `batches`, `sales`, `visual`, `marketplace`, `dan_inventory`, etc.)
+- Set up proper vector configurations (768-dimensional embeddings with Cosine distance)
+- Create payload indexes for efficient querying (`shopId`, `category`, `expiry_date`, etc.)
+
+📖 **For detailed information on Qdrant collection architecture, see [docs/qdrant-architecture-guide.md](docs/qdrant-architecture-guide.md)**
+
+### Step 4: Install Dependencies
+
+```bash
+npm install
+```
+
+### Step 5: Run the Application
+
+#### Option 1: Run Everything Together (Recommended)
+
+```bash
+npm run dev:full
+```
+
+This starts both:
+- Qdrant proxy server (port 8787)
+- Vite development server (port 3000)
+
+#### Option 2: Run Separately
+
+Terminal 1 - Start Qdrant proxy:
+```bash
+npm run proxy
+```
+
+Terminal 2 - Start development server:
      ```bash
-     node -e "import bcrypt from 'bcryptjs'; const hash = await bcrypt.hash('your-password', 10); console.log(hash);"
-     ```
-4. Start the local Qdrant proxy:
-   `npm run proxy`
-5. (Optional) Setup Qdrant collections and indexes:
-   - Setup all collections: `npm run setup:qdrant`
-   - Recreate collections (deletes existing): `npm run setup:qdrant:recreate`
-   - Setup specific collections: `node scripts/setupQdrant.mjs --collections=items,products`
-6. Run the app UI (in another terminal) or use the combined helper:
-   - UI only: `npm run dev`
-   - Proxy + UI together: `npm run dev:full`
+npm run dev
+```
 
-# AI-Genesis
+### Step 6: Access the Application
 
-Below follows the Idea Pitch, please read it through. It is fully AI generated (Grok) numbers not verified.
+- **Frontend**: http://localhost:3000
+- **Qdrant Proxy**: http://localhost:8787
+- **Health Check**: http://localhost:8787/healthz
 
+### Troubleshooting
 
+- **Port already in use**: Change ports in `vite.config.ts` (frontend) or `server/index.js` (proxy)
+- **Qdrant connection errors**: Verify `QDRANT_UPSTREAM_URL` is your Qdrant Cloud URL (not localhost)
+- **Supabase errors**: Ensure RLS policies are enabled and you've run the schema SQL
+- **Gemini API errors**: Check your API key is valid and billing is enabled (free tier has quotas)
 
-### Short Description (Elevator Pitch – 60-90 seconds, 208 words)
+---
+
+## 💡 The Idea
+
+### Short Description (Elevator Pitch – 60-90 seconds)
 
 ShopNexus is the all-in-one AI operating system for small and medium-sized 24/7 self-service and autonomous convenience shops.
 
@@ -52,179 +188,307 @@ ShopNexus delivers a complete, ready-to-deploy suite:
 - Intelligent POS with instant sales analytics
 - Automated waste tracking and reduction alerts
 - Product performance scoring and dynamic reordering
-- RAG-powered natural language insights on Qdrant vector database (“show me products expiring this week within 5 km”)
+- RAG-powered natural language insights on Qdrant vector database ("show me products expiring this week within 5 km")
 
 The true differentiator: a built-in peer-to-peer marketplace that connects nearby ShopNexus operators to buy/sell excess or urgent stock in minutes, with integrated logistics coordination (DPD/GLS partners or freelance drivers).
 
-We cut management time by up to 85 %, reduce waste 35–60 %, and turn independent shops into a powerful local network — no central distributor needed.
+We cut management time by up to 85%, reduce waste 35–60%, and turn independent shops into a powerful local network — no central distributor needed.
 
-Market: unmanned/autonomous retail growing from ∼$82 Bn in 2025 at >24 % CAGR, inside a $950 Bn+ global convenience channel.
+Market: unmanned/autonomous retail growing from ~$82 Bn in 2025 at >24% CAGR, inside a $950 Bn+ global convenience channel.
 
 ShopNexus is the OS that finally makes truly autonomous 24/7 retail profitable for independent owners.
 
+---
 
-# Technical Documentation: Autonomous Shop Inventory AI
+## 🔧 Technology Stack
 
-## 1. Introduction
+### Frontend
+- **React 19** with **TypeScript** - Modern, type-safe UI framework
+- **Tailwind CSS** - Utility-first styling system
+- **Vite** - Fast build tool and dev server
 
-The **Autonomous Shop Inventory AI** is a sophisticated Single Page Application (SPA) designed to streamline inventory management for autonomous retail environments. It leverages the **Google Gemini API** for advanced OCR and data analysis, and features a **Decentralized Autonomous Network (DAN)** for a peer-to-peer marketplace.
+### Backend & Services
+- **Express.js** - Node.js server for Qdrant proxy
+- **Qdrant** - Vector database for semantic search and storage
+- **Supabase** - Authentication and relational data
+- **Google Gemini API** - OCR, computer vision, and natural language processing
 
-The application is fully cloud-based, with all data persistence handled by **Qdrant** (vector database) and **Supabase** (authentication and relational data). No local storage is used for data persistence - everything is stored in the cloud for real-time synchronization and multi-device access.
+### AI & Machine Learning
+- **Gemini 2.5 Flash** - Fast OCR, product identification, field extraction
+- **Gemini 2.5 Pro** - Advanced inventory analysis with RAG
+- **Vector Embeddings** - 768-dimensional embeddings for semantic search
 
-## 2. High-Level Architecture
+---
 
-- **Frontend Framework**: React 19 with TypeScript for a modern, type-safe, and component-based UI.
-- **Styling**: Tailwind CSS for a utility-first, responsive design system.
-- **AI Engine**: The `@google/genai` SDK is used to interact with the Google Gemini API for all AI-driven tasks.
-- **Data Persistence**: All data is stored in **Qdrant** (vector database) for products, inventory, batches, sales, and marketplace listings. **Supabase** handles authentication and shop/user management. No local storage is used for data persistence.
-- **State Management**: Primarily managed through React's native hooks (`useState`, `useEffect`, `useCallback`) within components, with business logic and data manipulation encapsulated in dedicated service modules.
+## 🏗️ Architecture
 
-## 3. Core Technologies & Services
+### High-Level Overview
 
-### 3.1. Gemini AI Service (`services/geminiService.ts`)
+The application is a **Single Page Application (SPA)** with cloud-based data persistence. All data is stored in **Qdrant** (vector database) and **Supabase** (authentication). No local storage is used for data persistence - everything is synchronized in real-time.
 
-This service is the central hub for all AI interactions, abstracting away the complexities of the Gemini API.
+### Core Services
 
-#### Models Used:
+#### 1. Gemini AI Service (`services/geminiService.ts`)
 
-- **`gemini-2.5-flash`**: Used for high-speed, cost-effective tasks such as:
-  - **Full Image OCR**: Analyzing an uploaded image of a product or delivery note and returning structured JSON data by enforcing a `responseSchema`.
-  - **Product Identification**: Identifying a product from a live video feed against a list of known inventory items.
-  - **Targeted Field Extraction**: Reading the value from a small, user-cropped image of a specific field (e.g., an expiration date).
-  - **Learned Feature Recognition (`findAndReadFeature`)**: A powerful function that takes a small "feature" image (e.g., a saved crop of a product's name) and locates that same feature within a larger, live camera view to extract its value, enabling the "scan-and-learn" functionality.
+The central hub for all AI interactions, abstracting away the complexities of the Gemini API.
 
-- **`gemini-2.5-pro`**: Used for the **"Advanced Inventory Analysis"** panel. It handles complex, natural language prompts, providing deep, context-aware insights into the inventory data by leveraging its larger context window and advanced reasoning capabilities.
+**Models Used:**
+- **`gemini-2.5-flash`**: High-speed, cost-effective tasks
+  - Full Image OCR - Analyzing product images and delivery notes
+  - Product Identification - Identifying products from live camera feeds
+  - Targeted Field Extraction - Reading specific fields (expiration dates, prices)
+  - Learned Feature Recognition - Finding learned features in new images for "scan-and-learn"
 
-### 3.2. Vector DB Service (Qdrant) (`services/vectorDBService.ts`)
+- **`gemini-2.5-pro`**: Advanced analysis
+  - Advanced Inventory Analysis - Complex natural language queries with deep insights
 
-This service manages the application's vector database using **Qdrant**, a production-ready vector database. It handles multiple collections for different entity types, with semantic search capabilities for products, suppliers, and inventory items.
+#### 2. Vector DB Service (Qdrant) (`services/qdrant/`)
 
-#### Collections:
+Manages all data persistence using **Qdrant**, a production-ready vector database.
 
-- `users`: User profiles and authentication data
-- `shops`: Shop/store records
-- `customers`: Customer profiles
-- `suppliers`: Supplier profiles (with semantic search on names)
-- `products`: Canonical product definitions (with semantic search on names/descriptions)
-- `items`: Inventory stock items (with semantic search on product names)
-- `batches`: Delivery batch records
-- `sales`: Sales transaction logs
-- `drivers`: Driver profiles
-- `visual`: Visual learning features for scan-and-learn
-- `marketplace`: Marketplace listings
+**Collections:**
+- `users` - User profiles and authentication data
+- `shops` - Shop/store records
+- `customers` - Customer profiles
+- `suppliers` - Supplier profiles (with semantic search)
+- `products` - Canonical product definitions (with semantic search)
+- `items` - Inventory stock items (with semantic search)
+- `batches` - Delivery batch records
+- `sales` - Sales transaction logs
+- `drivers` - Driver profiles
+- `visual` - Visual learning features for OCR
+- `marketplace` - Peer-to-peer marketplace listings
+- `dan_inventory` - DAN inventory offers
 
-#### Core Logic:
-It contains all business logic for inventory manipulation, including adding new batches, calculating product summaries, and processing sales based on a **First-Expired, First-Out (FEFO)** principle.
+**Core Logic:**
+- Business logic for inventory manipulation
+- Adding batches with FEFO (First-Expired, First-Out) processing
+- Product summaries and analytics
+- Semantic search across all collections
 
-**📖 For detailed information on Qdrant collection architecture, point IDs, indexes, and query patterns, see [docs/qdrant-architecture-guide.md](docs/qdrant-architecture-guide.md).**
+📖 **For detailed Qdrant architecture, see [docs/qdrant-architecture-guide.md](docs/qdrant-architecture-guide.md)**
 
-**📖 Important**: All Qdrant collections are properly configured with indexes and schema. The setup script (`scripts/setupQdrant.mjs`) ensures all collections have the correct payload indexes for efficient querying. See [docs/qdrant-architecture-guide.md](docs/qdrant-architecture-guide.md) for details.
+#### 3. Backend Service (`services/backendService.ts`)
 
-### 3.3. Backend Service (`services/backendService.ts`)
+Handles marketplace operations, order management, and driver coordination. All data stored in Qdrant collections.
 
-This service handles marketplace operations, order management, and driver/delivery coordination. All data is stored in Qdrant collections, with verification status managed through Supabase and Qdrant.
+- **Verification** - Shop and driver verification status
+- **Marketplace** - Peer marketplace listings
+- **Orders & Deliveries** - Order management and tracking
 
-- **Verification**: Shop and driver verification status is stored in Qdrant's `users` and `shops` collections.
-- **Marketplace**: Peer marketplace listings are stored in Qdrant's `marketplace` collection.
-- **Orders & Deliveries**: Order management and delivery tracking use Qdrant collections for persistence.
-
-### 3.4. Authentication Service (`services/shopAuthService.ts`)
+#### 4. Authentication Service (`services/shopAuthService.ts`)
 
 Manages user authentication and session state using Supabase.
 
-- **Registration**: Creates user accounts in Supabase with proper role assignments (shop, customer, supplier, driver).
-- **Session Management**: Uses Supabase authentication for secure session handling.
-- **Shop Context**: Manages active shop selection and Qdrant namespace association for multi-shop support.
+- **Registration** - Creates user accounts with role assignments (shop, customer, supplier, driver)
+- **Session Management** - Secure session handling
+- **Shop Context** - Active shop selection and Qdrant namespace association
 
-## 4. Key Components & UI Flow
+---
 
-### `App.tsx` (Root Component):
-- Acts as the main controller.
-- Manages authentication state, rendering `AuthPage` or the main application layout.
-- Handles tab-based navigation.
-- Manages data refresh through React state updates (no page refreshes needed).
-- Determines user roles and renders appropriate interfaces (shop, customer, supplier).
+## ⚙️ Implementation Details
 
-### `AuthPage.tsx`:
-- The entry point for new users.
-- A simple registration form that, upon submission, logs the user in with a **"pending verification"** status.
+### Key Components & UI Flow
 
-### `CameraCapture.tsx` (Live Scanner):
-A sophisticated modal that uses `navigator.mediaDevices.getUserMedia` to access the device camera.
+#### `App.tsx` (Root Component)
+- Main controller managing authentication state
+- Tab-based navigation
+- Data refresh through React state updates
+- Role-based UI rendering (shop, customer, supplier)
 
-It operates in multiple modes:
+#### Live OCR & Scanning System
 
-- **Auto-Scanning**: Periodically captures frames and sends them to Gemini for generic OCR and product identification.
-- **Learned Scanning**: If a known product is identified, it retrieves learned visual features from the `vectorDBService` and uses `findAndReadFeature` to perform targeted, fast, and accurate data extraction.
-- **Manual Capture**: Allows the user to tap the screen to draw a bounding box around a specific piece of information, which is then cropped and sent for precise analysis. The resulting cropped image is then saved back to the `vectorDBService` to improve future scans.
+**`ProductLearningScanner.tsx`** - Learn new products:
+- Auto-scanning mode for continuous product discovery
+- Manual field selection with bounding boxes
+- Saves products to catalog AND creates inventory items
+- Visual learning for improved future scans
 
-Every scan now keeps a running confidence score per field, so the highest quality reading survives repeated passes (live OCR no longer overwrites a good value with a later guess). When a shop scans an item the component also queries the canonical product catalog, so existing SKUs are auto-linked and only variable data (price, expiry, quantity, etc.) needs to be confirmed. For new products, the UI flips into "New Product" mode and asks the operator to register the missing attributes; every manually cropped field is persisted as a labeled training image that is referenced inside each item's `scanMetadata`.
+**`CameraCapture.tsx`** - Inventory scanning:
+- Multiple scanning modes:
+  - **Auto-Scanning**: Periodic frame capture with Gemini OCR
+  - **Learned Scanning**: Uses saved visual features for fast, accurate extraction
+  - **Manual Capture**: Tap-to-crop for precise field extraction
+- Confidence scoring - highest quality reading survives repeated passes
+- Product matching against canonical catalog
+- Auto-linking existing SKUs, only variable data needs confirmation
 
-### Inventorization & In-Shop Sales Flow
+**`KioskScanner.tsx`** - Customer product discovery:
+- Live camera scanner for product identification
+- Automatic catalog search on product match
 
-1. **Live OCR capture**  
-   `CameraCapture` continuously grabs frames, applies Gemini OCR, and lets the user draw focus boxes for stubborn fields. Each recognized field is tagged with its source (`manual`, `learned`, or `auto`) and a confidence score, and the highest-confidence value always wins across the entire scan session.
+### Inventorization & Sales Flow
 
-2. **Product matching & manual override**  
-   Identified products are matched against the canonical catalog (`ProductSummary` list). Known products immediately lock static metadata while allowing operators to update variable fields (buy price, shelf location, expiration date, etc.). If no match is found, the UI switches to “New Product” mode and guides the user through registration before any item is staged.
+1. **Live OCR Capture**
+   - Continuous frame capture with Gemini OCR
+   - User can draw focus boxes for stubborn fields
+   - Each field tagged with source (`manual`, `learned`, `auto`) and confidence score
 
-3. **Focus-area crops feed future scans**  
-   When the operator defines a focus area, the cropped image is saved through `addImageForField` into the `visual` collection (Qdrant) together with batch metadata. The resulting `captureId` is linked inside the staged item’s `scanMetadata.fieldCaptures`, so future scans can re-use the exact feature.
+2. **Product Matching & Manual Override**
+   - Identified products matched against canonical catalog
+   - Known products lock static metadata, allow variable field updates
+   - Unknown products trigger "New Product" registration
 
-4. **Batch staging with persistent scan metadata**  
-   `InventoryForm` bundles the scanned item, its blobs, and the captured feature list into a batch. Each entry records the aggregate OCR confidence plus the per-field capture audit trail. Minis batches remain editable until “Finish and Save Batch” is pressed.
+3. **Visual Learning**
+   - Cropped images saved to `visual` collection via `addImageForField`
+   - Future scans reuse learned features for faster, more accurate extraction
 
-5. **Inventory vs. product separation**  
-   Once a batch is saved, every line item becomes a stock point in Qdrant’s `items` collection, scoped to the active shop. The Inventory page only shows those shop-specific items, while the Product Catalog page continues to list all registered products across every shop (for reuse in future scans).
+4. **Batch Staging**
+   - Items bundled with scan metadata and field capture audit trail
+   - Editable until "Finish and Save Batch"
 
-6. **Sales-aware state**  
-   The inventorized items immediately surface inside the Inventory dashboard, the kiosk/cart flows, and downstream sales logic (FEFO deduction, marketplace listings, etc.), ensuring the in-shop POS is working off the exact same batch data that was captured from the shelves.
+5. **Inventory Persistence**
+   - Items saved to Qdrant `items` collection, scoped to active shop
+   - Inventory page shows shop-specific items
+   - Product Catalog shows all products (for reuse)
 
-### Customer Product Discovery
+6. **Sales Integration**
+   - Inventorized items immediately available in POS, kiosk, and cart flows
+   - FEFO (First-Expired, First-Out) deduction logic
+   - Real-time inventory updates
 
-- **Vector-powered catalog search.** `CustomerPage` queries Qdrant's `products` collection via `searchCatalogProducts()`, so every search request runs through the same semantic index used by shops.
-- **Live camera scanner.** Customers can open the `CustomerProductScanner` modal, capture a label, and run Gemini's product identification against the canonical catalog; matches automatically drive the search query so results stay in sync.
-- **Shop selection and shopping cart.** The customer interface allows browsing multiple shops, selecting products, and managing a shopping cart with checkout functionality.
-- **Graceful fallbacks.** When no text query is provided the page shows the top semantic matches straight from Qdrant.
+### Customer Experience
 
-### `BackendPage.tsx`:
-- Admin UI for managing shop and driver verification (when enabled).
-- Fetches pending and verified client lists from Qdrant collections.
-- The **"Verify"** button updates verification status in Qdrant and Supabase.
+- **Vector-powered catalog search** - Semantic search across all products
+- **Live camera scanner** - Product identification via camera
+- **Multi-shop browsing** - Browse and shop from multiple stores
+- **Shopping cart & checkout** - Complete e-commerce flow
 
-### `MarketplacePage.tsx`:
-- This component is **conditionally rendered**. It first checks if `user.isVerified`.
-- **If not verified**, it displays a **"Pending Verification"** message.
-- **If verified**, it fetches and displays peer data from the `backendService` and allows the user to list their own inventory for sale.
+### Marketplace & Network Features
 
-# Terminology 
+- **Peer-to-peer marketplace** - Buy/sell excess or urgent stock
+- **Verification system** - Shop and driver verification
+- **Integrated logistics** - Driver coordination for deliveries
 
-### Clarification of Acronyms in the ShopNexus Pitch Presentation
+---
 
-Here's a breakdown in a handy table for quick scanning—each with a plain-English explanation, formula (where relevant), and ShopNexus tie-in:
+## 🔮 Future Outlook & Vision
 
-| Acronym | Full Form | Explanation | ShopNexus Context | Key Sources |
-|---------|-----------|-------------|-------------------|-------------|
-| **CAGR** | Compound Annual Growth Rate | A measure of the mean annual growth rate of an investment or metric over a specified period, assuming compounding (reinvested profits). Formula: [(Ending Value / Beginning Value)^(1 / Number of Years)] - 1. It's like averaging growth but accounts for ups and downs over time, not just simple yearly adds. | Used to show the autonomous retail market exploding at 24.7% CAGR from $82B in 2025 to $600B+ by 2034—proves the massive, steady tailwind for our platform. |  Investopedia (core formula and business use);  Gartner (annualized revenue growth);  Wikipedia (smoothing volatility in economic data). |
-| **ARR** | Annual Recurring Revenue | The predictable yearly revenue from subscriptions or contracts, normalized to 12 months (e.g., multiply monthly subs by 12). It's a startup staple for showing stable, scalable income without one-offs. | Our target: Hit €5M ARR in 18 months via €199–€499/mo subscriptions per shop—investors love this for forecasting without fluff. |  Visible.vc (SaaS startup focus);  Alexander Jarvis (normalized subscription value);  JoinArc (predictable revenue for growth). |
-| **SaaS** | Software as a Service | A cloud-based delivery model where software is hosted centrally and accessed via subscription (like Netflix for apps). No installs needed—providers handle updates, security, and scaling. | ShopNexus is pure SaaS: One sub gets inventory, POS, and insights; we manage the backend so shop owners focus on profits, not servers. |  Microsoft Azure (scalable, managed access);  AWS (subscription model details);  Wikipedia (multi-tenant architecture). |
-| **POS** | Point of Sale | The hardware/software combo (e.g., checkout terminal) where retail transactions happen—handles payments, receipts, and basic sales tracking. Modern ones integrate inventory. | Our intelligent POS module syncs sales data in real-time with inventory, slashing manual reconciliation and enabling dynamic pricing. |  Wikipedia (transaction completion point);  Lightspeed (sales + inventory management);  SBA (cash register evolution). |
-| **OCR** | Optical Character Recognition | Tech that scans images or docs to extract and convert text (e.g., reading expiry dates from photos). Uses pattern recognition for accuracy. | Powers our shelf scanning: Phone cams snap stock, OCR reads labels/SKUs, feeding real-time inventory without manual counts. |  Wikipedia (text extraction from images);  Zebra (machine-readable conversion);  Hyland (automation from scans). |
-| **RAG** | Retrieval-Augmented Generation | An AI technique where large language models (LLMs) pull fresh data from external sources (e.g., databases) before generating responses—reduces hallucinations by grounding in real info. | Our RAG layer lets owners query in natural language (e.g., "Expiring stock nearby?") using Qdrant DB—pulls accurate, contextual insights on the fly. |  AWS (optimizing LLMs with knowledge bases);  Wikipedia (supplementing training data);  Google Cloud (external data integration). |
-| **SMB** | Small and Medium-sized Business | Companies with <100 employees (small) or 100–999 (medium), often <$50M revenue (small) or <$1B (medium). The "backbone" of economies, but resource-constrained vs. enterprises. | Targets exactly our users: 24/7 shops with 1–50 staff, needing affordable tools—our OS scales without big-chain complexity. |  Salesforce (employee/revenue defs);  Deltek (economic role);  TechTarget (vs. large corps). |
-| **API** | Application Programming Interface | A set of rules/protocols letting software apps talk to each other (e.g., like a menu for ordering data). Enables integration without knowing internals. | We use APIs for logistics (e.g., GLS/DPD slots) and marketplace matching—seamless peer-to-peer stock swaps without custom builds. |  Reddit/learnprogramming (communication bridge);  AWS (request/response contracts);  Contentful (rules for data access). |
-| **ROI** | Return on Investment | A percentage showing profit relative to cost: (Gain - Cost) / Cost × 100. Measures efficiency; ignores time unless annualized. | Shops see <2-month ROI via €4K/mo savings on waste/time—our pitch proves quick payback to hook VCs on customer value. |  Investopedia (profit-to-cost ratio);  Investopedia (calculation guide);  CFI (net income basis). |
-| **SKU** | Stock Keeping Unit | A unique alphanumeric code (e.g., CL-SHOE-BLK-10) for tracking product variants in inventory—includes style, size, color, etc., for retail ops. | Every item gets an SKU for OCR scanning and performance scoring—tracks velocity, waste, and reorders per variant. |  Square (unique inventory ID);  Investopedia (scannable tracking);  Shopify (product differentiation). |
+### Shelf Scanning Feature
 
-These defs are drawn from cross-referenced libraries like Investopedia (finance heavy-hitters), Wikipedia (broad overviews), AWS/Google Cloud (tech specifics), and Gartner/Salesforce (business glossaries)—ensuring balanced, up-to-date takes as of Nov 2025. No single source dominates; I prioritized consensus for accuracy.
+**Vision**: Continuous, automated shelf monitoring using fixed cameras or mobile devices.
 
-## Documentation
+**Capabilities:**
+- **Real-time shelf monitoring** - Fixed cameras continuously monitor shelves
+- **Automatic inventory updates** - Detects when items are removed or added
+- **Expiration tracking** - Automatically tracks expiration dates from shelf labels
+- **Stock level alerts** - Notifies when items are running low
+- **Theft detection** - Identifies unusual patterns or missing items
+- **Zero manual counts** - Eliminates need for periodic inventory counts
+
+**Technology:**
+- Fixed IP cameras with continuous video feed
+- Mobile device placement for smaller shops
+- Computer vision models trained on product recognition
+- Real-time processing with Gemini Vision API
+- Integration with existing OCR and learning systems
+
+### Decentralized Autonomous Network (DAN)
+
+**Vision**: A decentralized network that securely shares product, inventory, and fulfillment intelligence across shops, suppliers, drivers, and customers while preserving local control.
+
+**Key Features:**
+
+1. **Federated Collaboration**
+   - Independent shops share structured signals (stock, expirations, fulfillment capacity)
+   - No central ownership - peer-to-peer data sharing
+   - Opt-in sharing with granular control
+
+2. **Trust & Traceability**
+   - Immutable provenance for every shared datum
+   - Cryptographic signatures for authenticity
+   - Verifiable audit logs mapped to Qdrant IDs
+
+3. **Autonomous Workflows**
+   - Smart policies trigger cross-organization automations
+   - Automated restock alerts, driver assignments
+   - Reduction in manual operations
+
+4. **Composable Intelligence**
+   - RAG/Gemini capabilities over shared data
+   - Respects tenant boundaries
+   - Latency comparable to local analytics
+
+**Architecture:**
+- **Local-first** - Each participant maintains authoritative Qdrant namespace
+- **Event sourcing** - Changes propagated as append-only events
+- **Cryptographic envelopes** - All shared artifacts signed by origin shop
+- **Progressive decentralization** - Starts with Supabase + Qdrant, can migrate to community-hosted gateways
+
+**Network Effects:**
+- Once 15+ shops in a city use ShopNexus, waste drops another 50%
+- Shop A's surplus becomes Shop B's emergency order
+- Integrated logistics (GLS/DPD API or freelance drivers)
+- Marketplace revenue share (4-6% transaction fee)
+
+📖 **For detailed DAN architecture, see [docs/DAN-concept.md](docs/DAN-concept.md)**
+
+### Additional Future Enhancements
+
+- **Advanced Analytics Dashboard** - Predictive analytics, demand forecasting, automated reordering
+- **Mobile Apps** - Native iOS/Android apps for shop owners and customers
+- **IoT Integration** - Smart scales, RFID readers, temperature sensors
+- **Multi-language Support** - International expansion with localization
+- **API Ecosystem** - Third-party integrations for POS systems, accounting software
+- **Advanced AI Features** - Predictive waste modeling, dynamic pricing optimization, demand forecasting
+
+---
+
+## 📚 Documentation
 
 ### Architecture Guides
 
-- **[Qdrant Vector Database Architecture Guide](docs/qdrant-architecture-guide.md)**: Comprehensive guide covering collection strategy, point IDs, vector embeddings, payload structure, index strategy, query patterns, and best practices for the Qdrant vector database integration.
-- **[DAN Architecture](docs/qdrant-architecture-guide.md#dan-architecture)**: Explains how the same Qdrant schema doubles as the replication/event layer for our Decentralized Autonomous Network (Shop Nodes, relays, and observers).
+- **[Qdrant Vector Database Architecture Guide](docs/qdrant-architecture-guide.md)**: Comprehensive guide covering collection strategy, point IDs, vector embeddings, payload structure, index strategy, query patterns, and best practices.
+
+- **[DAN Architecture](docs/DAN-concept.md)**: Detailed explanation of the Decentralized Autonomous Network concept, architecture, and implementation.
+
+- **[Pitch Deck](docs/Pitch.md)**: Business pitch and market analysis.
+
+- **[Shop Workflow Plan](docs/shop-workflow-plan.md)**: Detailed workflow documentation for shop operations.
 
 ### Setup Scripts
 
-- **`scripts/setupQdrant.mjs`**: Automated script to initialize all Qdrant collections and payload indexes according to the architecture guide. Run with `npm run setup:qdrant` or see the script for advanced options.
+- **`scripts/setupQdrant.mjs`**: Automated script to initialize all Qdrant collections and payload indexes. Run with `npm run setup:qdrant`.
+
+- **`scripts/seedInventory.mjs`**: Script to seed test inventory data.
+
+### Scripts Reference
+
+```bash
+npm run dev              # Start Vite dev server only
+npm run proxy            # Start Qdrant proxy server only
+npm run dev:full         # Start both proxy and dev server
+npm run build            # Build for production
+npm run preview          # Preview production build
+npm run setup:qdrant     # Setup Qdrant collections
+npm run setup:qdrant:recreate  # Recreate collections (WARNING: deletes data)
+```
+
+---
+
+## 📊 Terminology
+
+| Acronym | Full Form | Explanation | Context |
+|---------|-----------|-------------|---------|
+| **CAGR** | Compound Annual Growth Rate | Mean annual growth rate over time, accounting for compounding | Market growing at 24.7% CAGR from $82B to $600B+ |
+| **POS** | Point of Sale | Hardware/software for retail transactions | Intelligent POS with real-time inventory sync |
+| **OCR** | Optical Character Recognition | Extracts text from images | Powers shelf scanning for inventory |
+| **RAG** | Retrieval-Augmented Generation | LLMs pull data from external sources before generating | Natural language queries on Qdrant database |
+| **FEFO** | First-Expired, First-Out | Inventory management prioritizing expiring items | Sales deduction logic in inventory system |
+| **DAN** | Decentralized Autonomous Network | Peer-to-peer network for sharing inventory intelligence | Future network layer for marketplace |
+
+---
+
+## 🤝 Contributing
+
+This is an AI Studio submission. For questions or contributions, please contact the project maintainers.
+
+---
+
+## 📄 License
+
+[Specify your license here]
+
+---
+
+**Built with ❤️ for autonomous retail**
