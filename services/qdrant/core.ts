@@ -43,10 +43,6 @@ const normalizeQdrantUrl = (raw?: string | null): string | null => {
     trimmed = trimmed.slice(0, -1);
   }
   
-<<<<<<< HEAD
-  // If URL doesn't have a protocol, it's relative - convert to absolute
-  // This happens in production when vite.config.ts sets QDRANT_URL to '/qdrant'
-=======
   // Detect and warn about localhost:6333 (default Qdrant port) - this won't work in production
   if (trimmed.includes(':6333') || trimmed.includes('localhost:6333') || trimmed.includes('127.0.0.1:6333')) {
     console.warn('[Qdrant Core] Detected port 6333 in URL - this is the default Qdrant port and may not work in production:', trimmed);
@@ -54,7 +50,6 @@ const normalizeQdrantUrl = (raw?: string | null): string | null => {
   
   // If the URL doesn't start with http:// or https://, it's a relative URL
   // Convert it to an absolute URL using the current origin
->>>>>>> 98579f9 (fix wrong port forwarding)
   if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
     // In browser, use window.location.origin to get the full URL
     if (typeof window !== 'undefined' && window.location) {
