@@ -9,7 +9,7 @@ import { TrashIcon } from './icons/TrashIcon';
 import { ScanIcon } from './icons/ScanIcon';
 import KioskScanner from './KioskScanner';
 
-const RETAIL_MARKUP = 1.4; // 40% markup
+const RETAIL_MARKUP = 1.4; // 40% markup - fallback only
 
 interface KioskPageProps {
   summaries: ProductSummary[];
@@ -30,10 +30,14 @@ const KioskPage: React.FC<KioskPageProps> = ({ summaries, onPurchase }) => {
 
   const products = useMemo(() => {
     return summaries
-        .map(summary => ({
-            ...summary,
-            price: summary.averageCostPerUnit * RETAIL_MARKUP
-        }))
+        .map(summary => {
+            // Use actual sellPrice from DB if available, otherwise fallback to calculated markup
+            const price = summary.averageSellPrice ?? (summary.averageCostPerUnit * RETAIL_MARKUP);
+            return {
+                ...summary,
+                price
+            };
+        })
         .filter(product => {
             if (selectedCategory === 'All') return true;
             return product.category === selectedCategory;
@@ -101,7 +105,9 @@ const KioskPage: React.FC<KioskPageProps> = ({ summaries, onPurchase }) => {
   const handleProductScanned = (productName: string) => {
     const product = summaries.find(p => p.productName === productName);
     if (product) {
-        const productWithPrice = { ...product, price: product.averageCostPerUnit * RETAIL_MARKUP };
+        // Use actual sellPrice from DB if available, otherwise fallback to calculated markup
+        const price = product.averageSellPrice ?? (product.averageCostPerUnit * RETAIL_MARKUP);
+        const productWithPrice = { ...product, price };
         handleAddToCart(productWithPrice);
     }
   };

@@ -40,6 +40,8 @@ export const getProductSummaries = async (
 ): Promise<ProductSummary[]> => {
   const summaryMap = new Map<string, ProductSummary & { 
     totalCost: number; 
+    totalSellPrice: number; // Total sell price (sellPrice * quantity)
+    itemsWithSellPrice: number; // Count of items that have sellPrice set
     itemCount: number; 
     supplierIdsSet: Set<string> 
   }>();
@@ -72,12 +74,25 @@ export const getProductSummaries = async (
         expirationDate: stockItem.expirationDate 
       });
       existing.totalCost += stockItem.costPerUnit * stockItem.quantity;
+      
+      // Calculate sell price total - use sellPrice if available, otherwise fallback to calculated from costPerUnit
+      const sellPrice = stockItem.sellPrice ?? (stockItem.costPerUnit * 1.4); // Default 40% markup if sellPrice not set
+      existing.totalSellPrice += sellPrice * stockItem.quantity;
+      if (stockItem.sellPrice !== undefined && stockItem.sellPrice !== null) {
+        existing.itemsWithSellPrice += stockItem.quantity;
+      }
+      
       existing.itemCount += stockItem.quantity;
     } else {
       const supplierIds = new Set<string>();
       if (stockItem.supplierId) {
         supplierIds.add(stockItem.supplierId);
       }
+      
+      // Calculate sell price total - use sellPrice if available, otherwise fallback to calculated from costPerUnit
+      const sellPrice = stockItem.sellPrice ?? (stockItem.costPerUnit * 1.4); // Default 40% markup if sellPrice not set
+      const itemsWithSellPrice = (stockItem.sellPrice !== undefined && stockItem.sellPrice !== null) ? stockItem.quantity : 0;
+      
       summaryMap.set(product.id, {
         productId: product.id,
         productName: product.name,
@@ -93,6 +108,8 @@ export const getProductSummaries = async (
           expirationDate: stockItem.expirationDate 
         }],
         totalCost: stockItem.costPerUnit * stockItem.quantity,
+        totalSellPrice: sellPrice * stockItem.quantity,
+        itemsWithSellPrice,
         itemCount: stockItem.quantity,
         averageCostPerUnit: 0,
       });
@@ -109,11 +126,13 @@ export const getProductSummaries = async (
       Array.from(summary.supplierIdsSet).some(id => shopSupplierIds.has(id));
     if (!hasShopSupplier) return;
 
-    const { totalCost, itemCount, supplierIdsSet, ...rest } = summary;
+    const { totalCost, totalSellPrice, itemsWithSellPrice, itemCount, supplierIdsSet, ...rest } = summary;
     finalSummaries.push({
       ...rest,
       supplierIds: Array.from(supplierIdsSet).filter(id => shopSupplierIds.has(id)),
       averageCostPerUnit: itemCount > 0 ? totalCost / itemCount : 0,
+      // Calculate average sell price from actual sellPrice values, or fallback to calculated from cost if no sellPrice set
+      averageSellPrice: itemCount > 0 ? totalSellPrice / itemCount : undefined,
     });
   });
 

@@ -380,6 +380,7 @@ export interface ProductSummary {
   quantityType: string;
   earliestExpiration: string;
   averageCostPerUnit: number;
+  averageSellPrice?: number; // Average sell price from actual sellPrice values in inventory items
   supplierIds?: string[]; // Array of supplier IDs that supply this product
   batches: {
     batchId: string;

@@ -49,7 +49,7 @@ export const recordSale = async (
 
   const transactionItems: SaleTransaction['items'] = [];
   let totalAmount = 0;
-  const RETAIL_MARKUP = 1.4;
+  const RETAIL_MARKUP = 1.4; // Fallback only - should use actual sellPrice from DB
   const touchedItems: StockItem[] = [];
   const removedItems: StockItem[] = [];
 
@@ -73,7 +73,8 @@ export const recordSale = async (
       stockItem.quantity -= deduction;
       quantityToDeduct -= deduction;
 
-      const priceAtSale = stockItem.costPerUnit * RETAIL_MARKUP;
+      // Use actual sellPrice from DB if available, otherwise fallback to calculated markup
+      const priceAtSale = stockItem.sellPrice ?? (stockItem.costPerUnit * RETAIL_MARKUP);
       transactionItems.push({
         productId: product.id,
         quantity: deduction,

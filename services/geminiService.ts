@@ -526,9 +526,61 @@ const stockEstimationSchema = {
 export const estimateStockFromShelfPhoto = async (
     shelfImage: Blob,
     productName: string,
-    expectedCapacity?: number
+    expectedCapacity?: number,
+    inventoryData?: StockItem[],
+    shopId?: string,
+    productCatalog?: ProductSummary[]
 ): Promise<StockEstimationResult> => {
     try {
+        // Ensure we have shop context if inventory data is provided
+        const resolvedShopId = shopId || (typeof activeShopId === 'string' 
+            ? activeShopId 
+            : (activeShopId && typeof activeShopId === 'object' && activeShopId !== null && 'id' in activeShopId)
+                ? (activeShopId as { id: string }).id
+                : null);
+        
+        // Find inventory records for this product in the shop
+        let shopInventoryQuantity = 0;
+        let inventoryContext = '';
+        
+        if (inventoryData && resolvedShopId) {
+            // Normalize product name for matching (case-insensitive, trimmed)
+            const normalizedProductName = productName.toLowerCase().trim();
+            
+            // Try to find productId by matching product name in catalog
+            let matchingProductIds: string[] = [];
+            if (productCatalog) {
+                matchingProductIds = productCatalog
+                    .filter(p => p.productName.toLowerCase().trim() === normalizedProductName)
+                    .map(p => p.productId || '');
+            }
+            
+            // Filter inventory items that belong to this shop
+            const shopInventory = inventoryData.filter(item => {
+                const itemShopId = typeof item.shopId === 'string' 
+                    ? item.shopId 
+                    : (item.shopId && typeof item.shopId === 'object' && item.shopId !== null && 'id' in item.shopId)
+                        ? (item.shopId as { id: string }).id
+                        : null;
+                
+                // If we found productIds, match by productId; otherwise include all shop items
+                // (The AI will help identify which product matches in the visual analysis)
+                if (matchingProductIds.length > 0) {
+                    return itemShopId === resolvedShopId && matchingProductIds.includes(item.productId || '');
+                }
+                return itemShopId === resolvedShopId;
+            });
+            
+            // Sum up all quantities for matching products
+            shopInventoryQuantity = shopInventory.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            
+            if (shopInventoryQuantity > 0) {
+                inventoryContext = `\n\nRecorded Inventory (Shop ID: ${resolvedShopId}):\n- Product: ${productName}\n- Total recorded quantity in system: ${shopInventoryQuantity} units\n- Compare your visual count with this recorded quantity and identify any discrepancies.`;
+            } else if (shopInventory.length === 0 && inventoryData.length > 0) {
+                inventoryContext = `\n\nNote: No recorded inventory found for "${productName}" in Shop ID: ${resolvedShopId}. This may be a new product or not yet entered into the system.`;
+            }
+        }
+        
         const ai = new GoogleGenAI({ apiKey: API_KEY });
         const imagePart = await blobToGenerativePart(shelfImage);
         
@@ -536,7 +588,11 @@ export const estimateStockFromShelfPhoto = async (
             ? `Expected shelf capacity: ${expectedCapacity} units.`
             : 'No expected capacity provided.';
         
-        const prompt = `Analyze this shelf photo for ${productName}.
+        const shopContext = resolvedShopId 
+            ? `\nIMPORTANT: This analysis is for Shop ID: ${resolvedShopId}. Compare your visual estimate against the shop's recorded inventory.`
+            : '';
+        
+        const prompt = `Analyze this shelf photo for ${productName}${shopContext}.
         
         Tasks:
         1. Count visible units of the product
@@ -544,10 +600,11 @@ export const estimateStockFromShelfPhoto = async (
         3. Assess shelf fullness (0-100%)
         4. Identify any damage or quality issues
         5. Check expiration dates if visible
+        6. Compare visual count with recorded inventory (if provided) and note discrepancies${inventoryContext ? '' : ' (no inventory data provided for comparison)'}
         
-        ${capacityContext}
+        ${capacityContext}${inventoryContext}${shopContext}
         
-        Provide detailed analysis with confidence score.`;
+        Provide detailed analysis with confidence score. If inventory data is provided, explicitly compare the visual estimate with the recorded quantity and explain any differences.`;
         
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-pro',
@@ -995,16 +1052,53 @@ export const generateVisualInventoryInsights = async (
             throw new Error("No shelf images provided.");
         }
         
+        // Ensure we have shop context - all data should be shop-scoped
+        const shopId = typeof activeShopId === 'string' 
+            ? activeShopId 
+            : (activeShopId && typeof activeShopId === 'object' && activeShopId !== null && 'id' in activeShopId)
+                ? (activeShopId as { id: string }).id
+                : null;
+        
+        if (!shopId) {
+            throw new Error("No active shop context. Analysis is shop-scoped and requires an active shop.");
+        }
+        
+        // Validate that all inventory data belongs to the active shop
+        const shopScopedInventory = inventoryData.filter(item => {
+            const itemShopId = typeof item.shopId === 'string' 
+                ? item.shopId 
+                : (item.shopId && typeof item.shopId === 'object' && item.shopId !== null && 'id' in item.shopId)
+                    ? (item.shopId as { id: string }).id
+                    : null;
+            return itemShopId === shopId;
+        });
+        
+        if (shopScopedInventory.length !== inventoryData.length) {
+            console.warn(`[Visual Insights] Filtered out ${inventoryData.length - shopScopedInventory.length} items that don't belong to shop ${shopId}`);
+        }
+        
         const ai = new GoogleGenAI({ apiKey: API_KEY });
         const imageParts = await Promise.all(shelfImages.map(blobToGenerativePart));
         
-        // Prepare data context (sample to avoid token limits)
+        // Get product names from the products cache for better AI analysis
+        const { db: productsDb } = await import('./qdrant/services/helpers');
+        
+        // Prepare data context (sample to avoid token limits) - only shop-scoped data
+        // Include product names so AI can match products in images to inventory
         const dataContext = JSON.stringify({
-            inventory: inventoryData.slice(0, 50).map(item => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                expirationDate: item.expirationDate,
-            })),
+            shopId: shopId,
+            inventory: shopScopedInventory.slice(0, 50).map(item => {
+                const product = productsDb.products.get(item.productId);
+                return {
+                    productId: item.productId,
+                    productName: product?.name || 'Unknown Product',
+                    manufacturer: product?.manufacturer || 'Unknown',
+                    category: product?.category || 'General',
+                    quantity: item.quantity,
+                    expirationDate: item.expirationDate,
+                    location: item.location || 'Not specified',
+                };
+            }),
             recentSales: salesHistory.slice(-20).map(sale => ({
                 timestamp: sale.timestamp,
                 items: sale.items,
@@ -1012,20 +1106,22 @@ export const generateVisualInventoryInsights = async (
             })),
         }, null, 2);
         
-        const prompt = `Analyze these shelf photos combined with inventory data.
+        const prompt = `Analyze these shelf photos from a specific shop combined with that shop's inventory data.
         
-        Inventory Data:
+        IMPORTANT: This analysis is for Shop ID: ${shopId}. All inventory and sales data provided is specific to this shop only.
+        
+        Inventory Data (Shop-Scoped):
         ${dataContext}
         
         Tasks:
-        1. Compare visual stock levels with recorded inventory
-        2. Identify discrepancies (visual vs recorded)
-        3. Find products that look expired/damaged
-        4. Suggest reordering based on visual stock levels
-        5. Identify layout optimization opportunities
-        6. Flag high-risk items (expiring soon, low stock, damaged)
+        1. Compare visual stock levels with recorded inventory for this shop
+        2. Identify discrepancies (visual vs recorded) specific to this shop
+        3. Find products that look expired/damaged in this shop's shelves
+        4. Suggest reordering based on visual stock levels for this shop
+        5. Identify layout optimization opportunities for this shop
+        6. Flag high-risk items (expiring soon, low stock, damaged) in this shop
         
-        Provide actionable insights combining visual and data analysis.
+        Provide actionable insights combining visual and data analysis for this specific shop.
         Format as structured recommendations with severity levels.`;
         
         const response = await ai.models.generateContent({

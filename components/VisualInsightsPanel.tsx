@@ -69,15 +69,21 @@ const VisualInsightsPanel: React.FC<VisualInsightsPanelProps> = ({
           break;
 
         case 'stock-estimation':
-          const productName = prompt('Enter product name for stock estimation:') || 'Unknown Product';
-          const capacity = prompt('Enter expected shelf capacity (optional):');
-          const stockResult = await estimateStockFromShelfPhoto(
-            selectedImages[0],
-            productName,
-            capacity ? parseInt(capacity) : undefined
-          );
-          setResults(stockResult);
-          showToast('Stock estimation completed!', 'success');
+          {
+            const productName = prompt('Enter product name for stock estimation:') || 'Unknown Product';
+            const capacity = prompt('Enter expected shelf capacity (optional):');
+            const shopId = getActiveShopId();
+            const stockResult = await estimateStockFromShelfPhoto(
+              selectedImages[0],
+              productName,
+              capacity ? parseInt(capacity) : undefined,
+              inventoryData, // Pass shop-scoped inventory data
+              shopId || undefined, // Pass shop ID
+              productCatalog // Pass product catalog for name-to-ID matching
+            );
+            setResults(stockResult);
+            showToast('Stock estimation completed!', 'success');
+          }
           break;
 
         case 'quality-assessment':
