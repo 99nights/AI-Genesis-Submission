@@ -6,6 +6,15 @@
  */
 
 export default async function handler(req, res) {
+  // CRITICAL: Log immediately to verify function is being called
+  console.log('[Qdrant Proxy] ===== FUNCTION CALLED =====');
+  console.log('[Qdrant Proxy] Method:', req.method);
+  console.log('[Qdrant Proxy] URL:', req.url);
+  console.log('[Qdrant Proxy] Query:', JSON.stringify(req.query));
+  console.log('[Qdrant Proxy] Query.path:', req.query.path);
+  console.log('[Qdrant Proxy] Query.path type:', typeof req.query.path);
+  console.log('[Qdrant Proxy] Query.path isArray:', Array.isArray(req.query.path));
+  
   // Enable CORS for all requests
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -13,6 +22,7 @@ export default async function handler(req, res) {
 
   // Handle OPTIONS requests
   if (req.method === 'OPTIONS') {
+    console.log('[Qdrant Proxy] OPTIONS request, returning 200');
     return res.status(200).end();
   }
 
