@@ -23,8 +23,13 @@ export default async function handler(req, res) {
   console.log('[Qdrant Proxy] Request received:', {
     method: req.method,
     url: req.url,
+    originalUrl: req.url,
     query: req.query,
+    queryPath: req.query.path,
+    queryPathType: typeof req.query.path,
+    queryPathIsArray: Array.isArray(req.query.path),
     pathname: req.url.split('?')[0],
+    headers: req.headers,
   });
 
   if (!upstreamBase || !upstreamApiKey) {
@@ -84,6 +89,9 @@ export default async function handler(req, res) {
     upstreamPath,
     pathSegments,
     queryString,
+    fullUpstreamUrl: upstreamUrl,
+    originalUrl: req.url,
+    query: req.query,
   });
 
   try {
@@ -155,3 +163,4 @@ export default async function handler(req, res) {
     }
   }
 }
+

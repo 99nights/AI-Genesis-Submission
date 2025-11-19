@@ -350,9 +350,8 @@ const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory,
             
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Show loading skeleton if summaries are empty (data still loading) OR insights are loading */}
-                {/* This ensures loading shows immediately when Dashboard first renders */}
-                {summaries.length === 0 || isLoadingInsights ? (
+                {/* Show loading skeleton only while data is actively loading */}
+                {isLoadingInsights ? (
                     <>
                         {[1, 2, 3].map(i => (
                             <div key={i} className="bg-gray-800/50 p-6 rounded-lg border border-gray-700 flex items-center space-x-4">
@@ -469,20 +468,17 @@ const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory,
                         >
                             Add New Inventory Batch
                         </button>
-                        {summaries.length === 0 && (
-                            <button
-                                onClick={handleCreateTestData}
-                                disabled={isCreatingTestData}
-                                className="w-full text-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isCreatingTestData ? 'Creating Test Data...' : '🎲 Create Test Data'}
-                            </button>
-                        )}
                     </div>
                 </div>
                  <div className="bg-gray-800/50 p-6 rounded-lg border border-gray-700">
                     <h2 className="text-xl font-semibold text-white mb-4">Recently Added Products</h2>
-                    {summaries.length > 0 ? (
+                    {isLoadingInsights ? (
+                        <div className="space-y-3">
+                            <div className="h-12 bg-gray-700 rounded animate-pulse" />
+                            <div className="h-12 bg-gray-700 rounded animate-pulse" />
+                            <div className="h-12 bg-gray-700 rounded animate-pulse" />
+                        </div>
+                    ) : summaries.length > 0 ? (
                         <ul className="space-y-3">
                             {summaries.slice(0, 3).map(summary => (
                                 <li key={summary.productName} className="flex justify-between items-center text-sm p-3 bg-gray-900/50 rounded-md">
@@ -498,7 +494,7 @@ const Dashboard: React.FC<DashboardProps> = ({ summaries, onNavigateToInventory,
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-center text-gray-500 py-4">No inventory data available.</p>
+                        <p className="text-center text-gray-500 py-4">0 products</p>
                     )}
                 </div>
             </div>
