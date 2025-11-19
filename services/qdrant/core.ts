@@ -145,8 +145,72 @@ const initializeQdrantClient = (): QdrantClient | null => {
       console.log('[Qdrant Core] Adjusted URL to ensure /qdrant path:', finalUrl);
     }
     
-    // Create the client with the final URL
-    _qdrantClient = new QdrantClient({ url: finalUrl });
+    // CRITICAL FIX: QdrantClient extracts hostname and port from URL, and defaults to port 6333 if no port is specified
+    // For HTTPS URLs without explicit port, we need to explicitly set port 443 OR use the pathname as prefix
+    // The best approach is to ensure the pathname is preserved by using it as the prefix parameter
+    const parsedFinalUrl = new URL(finalUrl);
+    const pathname = parsedFinalUrl.pathname || '';
+    
+    // If there's a pathname (like /qdrant), use it as prefix to preserve it
+    // Otherwise QdrantClient will lose it and default to port 6333
+    const clientConfig: { url: string; prefix?: string } = { url: finalUrl };
+    
+    // IMPORTANT: For Vercel deployment, the URL has no explicit port, so QdrantClient defaults to 6333
+    // We need to explicitly construct the URL with the pathname OR use prefix
+    // Since QdrantClient doesn't preserve pathname from URL, we must either:
+    // 1. Use prefix (but pathname can't be used with prefix - see QdrantClient source)
+    // 2. Ensure the URL includes a port (for HTTPS, port 443 is implicit but must be explicit in URL)
+    // 
+    // Solution: Reconstruct URL with explicit port based on protocol
+    if (parsedFinalUrl.port === '' && pathname) {
+      // URL has no explicit port - QdrantClient will default to 6333!
+      // We need to construct a URL that preserves the pathname
+      // Since QdrantClient extracts hostname/port but loses pathname, we need a different approach
+      
+      // Actually, looking at QdrantClient source more carefully:
+      // - It uses pathname for prefix validation, not for constructing the URI
+      // - The URI is constructed as: scheme://host:port/prefix
+      // - So we need to ensure pathname is empty and use prefix instead
+      
+      // Extract just the origin (protocol + host)
+      const origin = `${parsedFinalUrl.protocol}//${parsedFinalUrl.host}`;
+      // Use the pathname as prefix
+      const prefixPath = pathname.replace(/^\/+|\/+$/g, ''); // Remove leading/trailing slashes
+      
+      if (prefixPath) {
+        // Use host/port from origin and prefix for the path
+        // For HTTPS, we need to explicitly not include port (or use 443) to avoid default 6333
+        // But actually, the issue is that QdrantClient will parse the URL and extract port=null, then default to 6333
+        // So we need to ensure the URL string itself has a port OR we use host/prefix pattern
+        
+        // Best solution: Use host + port (explicit 443 for HTTPS) + prefix
+        const isHttps = parsedFinalUrl.protocol === 'https:';
+        const explicitPort = isHttps ? ':443' : '';
+        const baseUrl = `${parsedFinalUrl.protocol}//${parsedFinalUrl.hostname}${explicitPort}`;
+        
+        _qdrantClient = new QdrantClient({ 
+          url: baseUrl,
+          prefix: prefixPath,
+        });
+        
+        console.log('[Qdrant Core] Using host+prefix pattern to avoid port 6333 default:', { baseUrl, prefix: prefixPath });
+      } else {
+        // No pathname, just use URL with explicit port
+        const isHttps = parsedFinalUrl.protocol === 'https:';
+        if (isHttps && !parsedFinalUrl.port) {
+          // Explicitly set port 443 for HTTPS to prevent default 6333
+          const urlWithPort = new URL(finalUrl);
+          urlWithPort.port = '443';
+          _qdrantClient = new QdrantClient({ url: urlWithPort.toString() });
+          console.log('[Qdrant Core] Added explicit port 443 to prevent default 6333');
+        } else {
+          _qdrantClient = new QdrantClient(clientConfig);
+        }
+      }
+    } else {
+      // URL has explicit port, use as-is
+      _qdrantClient = new QdrantClient(clientConfig);
+    }
     
     // Verify the client was created successfully and log the actual URL it's using
     // The QdrantClient library stores the URL internally, so we can't directly access it
