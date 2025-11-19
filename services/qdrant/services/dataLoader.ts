@@ -157,6 +157,10 @@ export const loadDataFromQdrant = async (): Promise<void> => {
 
     const legacyId = payload.inventoryId || Date.now() + Math.random();
 
+    // Calculate sellPrice if missing - use stored value, otherwise calculate from buyPrice/costPerUnit
+    const buyPrice = payload.buyPrice ?? payload.costPerUnit ?? 0;
+    const sellPrice = payload.sellPrice ?? (buyPrice > 0 ? buyPrice * 1.4 : undefined);
+
     const stock: StockItem = {
       id: legacyId,
       inventoryUuid,
@@ -168,8 +172,8 @@ export const loadDataFromQdrant = async (): Promise<void> => {
       costPerUnit: payload.costPerUnit || payload.buyPrice || 0,
       location: payload.location || undefined,
       supplierId: payload.supplierId || undefined,
-      buyPrice: payload.buyPrice ?? payload.costPerUnit,
-      sellPrice: payload.sellPrice ?? undefined,
+      buyPrice,
+      sellPrice,
       images: payload.images || [],
       scanMetadata: payload.scanMetadata || null,
       createdByUserId: payload.createdByUserId || undefined,

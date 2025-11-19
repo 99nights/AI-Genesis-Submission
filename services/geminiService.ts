@@ -1080,14 +1080,25 @@ export const generateVisualInventoryInsights = async (
         const ai = new GoogleGenAI({ apiKey: API_KEY });
         const imageParts = await Promise.all(shelfImages.map(blobToGenerativePart));
         
+        // Get product names from the products cache for better AI analysis
+        const { db: productsDb } = await import('./qdrant/services/helpers');
+        
         // Prepare data context (sample to avoid token limits) - only shop-scoped data
+        // Include product names so AI can match products in images to inventory
         const dataContext = JSON.stringify({
             shopId: shopId,
-            inventory: shopScopedInventory.slice(0, 50).map(item => ({
-                productId: item.productId,
-                quantity: item.quantity,
-                expirationDate: item.expirationDate,
-            })),
+            inventory: shopScopedInventory.slice(0, 50).map(item => {
+                const product = productsDb.products.get(item.productId);
+                return {
+                    productId: item.productId,
+                    productName: product?.name || 'Unknown Product',
+                    manufacturer: product?.manufacturer || 'Unknown',
+                    category: product?.category || 'General',
+                    quantity: item.quantity,
+                    expirationDate: item.expirationDate,
+                    location: item.location || 'Not specified',
+                };
+            }),
             recentSales: salesHistory.slice(-20).map(sale => ({
                 timestamp: sale.timestamp,
                 items: sale.items,
