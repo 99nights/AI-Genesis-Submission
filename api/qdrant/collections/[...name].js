@@ -1,8 +1,8 @@
 /**
- * Vercel Serverless Function - Qdrant Proxy
+ * Vercel Serverless Function - Qdrant Proxy for nested collection paths
  * 
- * This handles all /qdrant/* requests and forwards them to the upstream Qdrant instance.
- * Vercel serverless functions are the only way to handle API routes on Vercel.
+ * This handles /qdrant/collections/* requests (e.g., /qdrant/collections/sales)
+ * Vercel's catch-all routes sometimes need explicit nested routes for deep paths
  */
 
 export default async function handler(req, res) {
@@ -19,24 +19,8 @@ export default async function handler(req, res) {
   const upstreamBase = process.env.QDRANT_UPSTREAM_URL;
   const upstreamApiKey = process.env.QDRANT_API_KEY;
 
-  // Enhanced logging to debug issues
-  console.log('[Qdrant Proxy] Request received:', {
-    method: req.method,
-    url: req.url,
-    originalUrl: req.url,
-    query: req.query,
-    queryPath: req.query.path,
-    queryPathType: typeof req.query.path,
-    queryPathIsArray: Array.isArray(req.query.path),
-    pathname: req.url.split('?')[0],
-    headers: req.headers,
-  });
-
   if (!upstreamBase || !upstreamApiKey) {
-    console.error('[Qdrant Proxy] Missing environment variables:', {
-      hasUpstreamBase: !!upstreamBase,
-      hasUpstreamApiKey: !!upstreamApiKey,
-    });
+    console.error('[Qdrant Proxy] Missing environment variables');
     return res.status(500).json({ 
       error: 'Proxy configuration error',
       details: 'QDRANT_UPSTREAM_URL and QDRANT_API_KEY must be set in Vercel environment variables'
@@ -46,36 +30,33 @@ export default async function handler(req, res) {
   // Sanitize upstream URL
   const baseUrl = upstreamBase.endsWith('/') ? upstreamBase.slice(0, -1) : upstreamBase;
   
-  // Extract the path from the catch-all route
-  // In Vercel, for api/qdrant/[...path].js:
-  // - /api/qdrant/collections -> req.query.path = ['collections']
-  // - /api/qdrant/collections/sales -> req.query.path = ['collections', 'sales']
-  // - /qdrant/collections (rewritten to /api/qdrant/collections) -> req.query.path = ['collections']
-  let pathSegments = [];
+  // For nested route api/qdrant/collections/[...name].js:
+  // - /api/qdrant/collections/sales -> req.query.name = ['sales']
+  // - /api/qdrant/collections/sales/points -> req.query.name = ['sales', 'points']
+  let pathSegments = ['collections']; // Always start with 'collections' since we're in the collections directory
   
-  // First, try to get from req.query.path (Vercel's catch-all route parameter)
-  if (req.query.path) {
-    if (Array.isArray(req.query.path)) {
-      pathSegments = req.query.path;
-    } else if (typeof req.query.path === 'string') {
-      // Sometimes Vercel might pass it as a single string with slashes
-      pathSegments = req.query.path.split('/').filter(Boolean);
+  // Extract name segments from the catch-all route
+  if (req.query.name) {
+    if (Array.isArray(req.query.name)) {
+      pathSegments.push(...req.query.name);
+    } else if (typeof req.query.name === 'string') {
+      pathSegments.push(...req.query.name.split('/').filter(Boolean));
     } else {
-      pathSegments = [String(req.query.path)];
+      pathSegments.push(String(req.query.name));
     }
   }
   
-  // If pathSegments is still empty, extract from URL (fallback)
-  if (pathSegments.length === 0 && req.url) {
+  // If no name segments, just use 'collections'
+  // But if URL shows more, extract from URL
+  if (pathSegments.length === 1 && req.url) {
     const urlPath = req.url.split('?')[0];
-    // Remove /api/qdrant prefix if present, or /qdrant prefix
-    const cleanUrl = urlPath.replace(/^\/api\/qdrant\/?/, '').replace(/^\/qdrant\/?/, '');
+    const cleanUrl = urlPath.replace(/^\/api\/qdrant\/collections\/?/, '').replace(/^\/qdrant\/collections\/?/, '');
     if (cleanUrl) {
-      pathSegments = cleanUrl.split('/').filter(Boolean);
+      pathSegments.push(...cleanUrl.split('/').filter(Boolean));
     }
   }
   
-  const upstreamPath = pathSegments.length > 0 ? '/' + pathSegments.join('/') : '/';
+  const upstreamPath = '/' + pathSegments.join('/');
   
   // Preserve query string if present
   const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
@@ -83,15 +64,11 @@ export default async function handler(req, res) {
   // Build the full upstream URL
   const upstreamUrl = `${baseUrl}${upstreamPath}${queryString}`;
 
-  // Log for debugging (always log in production to help debug)
-  console.log(`[Qdrant Proxy] ${req.method} ${req.url} -> ${upstreamUrl}`, {
+  console.log(`[Qdrant Proxy Collections] ${req.method} ${req.url} -> ${upstreamUrl}`, {
     baseUrl,
     upstreamPath,
     pathSegments,
-    queryString,
-    fullUpstreamUrl: upstreamUrl,
-    originalUrl: req.url,
-    query: req.query,
+    queryName: req.query.name,
   });
 
   try {
@@ -140,7 +117,7 @@ export default async function handler(req, res) {
     res.send(text);
 
   } catch (error) {
-    console.error('[Qdrant Proxy] Error forwarding request:', error);
+    console.error('[Qdrant Proxy Collections] Error forwarding request:', error);
 
     if (error.name === 'AbortError') {
       return res.status(504).json({ 
