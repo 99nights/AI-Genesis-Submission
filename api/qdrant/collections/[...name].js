@@ -32,27 +32,40 @@ export default async function handler(req, res) {
   
   // For nested route api/qdrant/collections/[...name].js:
   // - /api/qdrant/collections/sales -> req.query.name = ['sales']
-  // - /api/qdrant/collections/sales/points -> req.query.name = ['sales', 'points']
+  // - /api/qdrant/collections/sales/points/scroll -> req.query.name = ['sales', 'points', 'scroll']
   let pathSegments = ['collections']; // Always start with 'collections' since we're in the collections directory
+  
+  // Enhanced logging
+  console.log('[Qdrant Proxy Collections] Query params:', {
+    name: req.query.name,
+    nameType: typeof req.query.name,
+    nameIsArray: Array.isArray(req.query.name),
+    url: req.url,
+  });
   
   // Extract name segments from the catch-all route
   if (req.query.name) {
     if (Array.isArray(req.query.name)) {
       pathSegments.push(...req.query.name);
     } else if (typeof req.query.name === 'string') {
+      // Split by slash in case Vercel passes it as a single string
       pathSegments.push(...req.query.name.split('/').filter(Boolean));
     } else {
       pathSegments.push(String(req.query.name));
     }
   }
   
-  // If no name segments, just use 'collections'
-  // But if URL shows more, extract from URL
-  if (pathSegments.length === 1 && req.url) {
+  // ALWAYS extract from URL as fallback (Vercel catch-all might not populate req.query.name correctly)
+  if (req.url) {
     const urlPath = req.url.split('?')[0];
+    // Remove /api/qdrant/collections prefix if present, or /qdrant/collections prefix
     const cleanUrl = urlPath.replace(/^\/api\/qdrant\/collections\/?/, '').replace(/^\/qdrant\/collections\/?/, '');
     if (cleanUrl) {
-      pathSegments.push(...cleanUrl.split('/').filter(Boolean));
+      // If we extracted from URL, use it (it's more reliable for deeply nested paths)
+      const urlSegments = cleanUrl.split('/').filter(Boolean);
+      if (urlSegments.length > 0) {
+        pathSegments = ['collections', ...urlSegments];
+      }
     }
   }
   
