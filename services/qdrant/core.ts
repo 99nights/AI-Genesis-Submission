@@ -200,10 +200,12 @@ const initializeQdrantClient = (): QdrantClient | null => {
             url = requestObj.url;
           }
           
-          // Fix port 8443 -> 443 for our Qdrant hostname
+          // Fix port 8443 -> remove port entirely (443 is default for HTTPS)
+          // Including :443 in the URL can cause Vercel rewrites to fail
           if (url.includes(targetHostname) && url.includes(':8443')) {
-            url = url.replace(':8443', ':443');
-            console.log('[Qdrant Core] Intercepting fetch to fix port 8443 -> 443:', url);
+            // Remove :8443 or :443 port - HTTPS uses 443 by default
+            url = url.replace(/:(8443|443)/, '');
+            console.log('[Qdrant Core] Intercepting fetch to remove explicit HTTPS port:', url);
             
             // Reconstruct the input with the corrected URL
             if (isRequest && requestObj) {
