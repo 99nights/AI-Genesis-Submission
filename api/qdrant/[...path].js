@@ -44,19 +44,29 @@ export default async function handler(req, res) {
   // Extract the path from the catch-all route
   // In Vercel, for api/qdrant/[...path].js:
   // - /api/qdrant/collections -> req.query.path = ['collections']
-  // - /api/qdrant/collections/users -> req.query.path = ['collections', 'users']
+  // - /api/qdrant/collections/sales -> req.query.path = ['collections', 'sales']
   // - /qdrant/collections (rewritten to /api/qdrant/collections) -> req.query.path = ['collections']
-  const pathSegments = Array.isArray(req.query.path) 
-    ? req.query.path 
-    : (req.query.path ? [req.query.path] : []);
+  let pathSegments = [];
   
-  // If pathSegments is empty, try to extract from URL
+  // First, try to get from req.query.path (Vercel's catch-all route parameter)
+  if (req.query.path) {
+    if (Array.isArray(req.query.path)) {
+      pathSegments = req.query.path;
+    } else if (typeof req.query.path === 'string') {
+      // Sometimes Vercel might pass it as a single string with slashes
+      pathSegments = req.query.path.split('/').filter(Boolean);
+    } else {
+      pathSegments = [String(req.query.path)];
+    }
+  }
+  
+  // If pathSegments is still empty, extract from URL (fallback)
   if (pathSegments.length === 0 && req.url) {
     const urlPath = req.url.split('?')[0];
-    // Remove /api/qdrant prefix if present
+    // Remove /api/qdrant prefix if present, or /qdrant prefix
     const cleanUrl = urlPath.replace(/^\/api\/qdrant\/?/, '').replace(/^\/qdrant\/?/, '');
     if (cleanUrl) {
-      pathSegments.push(...cleanUrl.split('/').filter(Boolean));
+      pathSegments = cleanUrl.split('/').filter(Boolean);
     }
   }
   
