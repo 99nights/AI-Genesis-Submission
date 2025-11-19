@@ -464,12 +464,7 @@ export const initializeAndSeedDatabase = async () => {
   
   console.log(`[VectorDB] After loadDataFromQdrant: ${db.products.size} products, ${db.stockItems.size} stock items`);
   
-  if (db.products.size === 0 && db.stockItems.size === 0) {
-    console.log('[VectorDB] No data found, seeding local store...');
-    await seedLocalStore(_activeShopId);
-    await loadDataFromQdrant();
-    console.log(`[VectorDB] After seeding: ${db.products.size} products, ${db.stockItems.size} stock items`);
-  }
+  // Demo data seeding removed - shops start with empty inventory
   await seedDefaultPolicyForShop(_activeShopId, _activeShopName);
   setInitialized(true);
   console.log('[VectorDB] Database initialization complete');
@@ -478,83 +473,6 @@ export const initializeAndSeedDatabase = async () => {
 export const syncBatchesFromQdrant = async () => {
   if (!_activeShopId) return;
   await loadDataFromQdrant();
-};
-
-// Seed local store (for initial setup)
-const seedLocalStore = async (shopId: string) => {
-  const supplier = await registerLocalSupplier({ name: 'Organic Foods Dist.' });
-  const supplierId = supplier.id;
-  const sampleBatches: Omit<Batch, 'id'>[] = [
-    { supplier: 'Organic Foods Dist.', deliveryDate: '2024-06-05', inventoryDate: '2024-06-05' },
-  ];
-  const sampleItems: (NewInventoryItemData & { batchIndex: number })[] = [
-    { 
-      batchIndex: 0, 
-      productName: 'Organic Oat Milk', 
-      manufacturer: 'Oatly', 
-      category: 'Beverages', 
-      expirationDate: '2024-12-15', 
-      quantity: 50, 
-      quantityType: 'cartons', 
-      costPerUnit: 2.5, 
-      location: 'Shelf A' 
-    },
-  ];
-
-  const addedBatches: Batch[] = [];
-  sampleBatches.forEach(batch => {
-    const id = uuidv4();
-    const newBatch = { ...batch, id };
-    db.batches.set(id, newBatch);
-    addedBatches.push(newBatch);
-  });
-
-  for (const item of sampleItems) {
-    const batch = addedBatches[item.batchIndex];
-    const productId = generateProductId(item.productName);
-    const product: Product = {
-      id: productId,
-      name: item.productName,
-      manufacturer: item.manufacturer,
-      category: item.category,
-    };
-    db.products.set(productId, product);
-    
-    // Create product in Qdrant
-    await createCanonicalProduct({
-      name: item.productName,
-      manufacturer: item.manufacturer,
-      category: item.category,
-    });
-
-    const inventoryUuid = uuidv4();
-    const stock: StockItem = {
-      id: Date.now() + Math.random(),
-      inventoryUuid,
-      shopId,
-      productId,
-      batchId: batch.id,
-      expirationDate: item.expirationDate,
-      quantity: item.quantity,
-      costPerUnit: item.costPerUnit,
-      location: item.location,
-      supplierId: supplierId || undefined,
-      buyPrice: item.costPerUnit,
-      sellPrice: item.costPerUnit * 1.4,
-      images: item.images,
-      scanMetadata: item.scanMetadata || null,
-      createdByUserId: shopId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      qdrantId: inventoryUuid,
-      status: 'ACTIVE',
-      shareScope: ['local'],
-    };
-    db.stockItems.set(stock.id, stock);
-    await persistInventoryEntry(stock);
-  }
-
-  console.info(`[Data Service] Seeded starter data for shop ${shopId}`);
 };
 
 // Add inventory batch (with OCR support)
