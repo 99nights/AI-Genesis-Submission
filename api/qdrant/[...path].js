@@ -84,6 +84,9 @@ export default async function handler(req, res) {
     upstreamPath,
     pathSegments,
     queryString,
+    fullUpstreamUrl: upstreamUrl,
+    originalUrl: req.url,
+    query: req.query,
   });
 
   try {
