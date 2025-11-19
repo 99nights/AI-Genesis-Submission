@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onTabChange, user, onLogout,
           <div className="flex items-center space-x-3">
             <SparkleIcon className="w-8 h-8 text-cyan-400" />
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              NexusShop
+              ShopNexus
             </h1>
           </div>
           <div className="flex items-center space-x-4">

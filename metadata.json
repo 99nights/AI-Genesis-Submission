@@ -1,5 +1,5 @@
 {
-  "name": "NexusShop",
+  "name": "ShopNexus",
   "description": "An AI-powered application for autonomous/self-service shops to manage inventory efficiently. It uses OCR technology via Gemini to scan products and delivery notes, automatically extracting key data. It also features advanced inventory analysis capabilities.",
   "requestFramePermissions": [
     "camera"
