@@ -8,11 +8,11 @@
   "rewrites": [
     {
       "source": "/qdrant/(.*)",
-      "destination": "/server/index.js"
+      "destination": "/api/qdrant/$1"
     },
     {
       "source": "/(.*)",
-      "destination": "/server/index.js"
+      "destination": "/index.html"
     }
   ]
 }
