@@ -6,11 +6,32 @@
  */
 
 export default async function handler(req, res) {
+  // Enable CORS for all requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, api-key');
+
+  // Handle OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   const upstreamBase = process.env.QDRANT_UPSTREAM_URL;
   const upstreamApiKey = process.env.QDRANT_API_KEY;
 
+  // Enhanced logging to debug issues
+  console.log('[Qdrant Proxy] Request received:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    pathname: req.url.split('?')[0],
+  });
+
   if (!upstreamBase || !upstreamApiKey) {
-    console.error('[Qdrant Proxy] QDRANT_UPSTREAM_URL and QDRANT_API_KEY must be set');
+    console.error('[Qdrant Proxy] Missing environment variables:', {
+      hasUpstreamBase: !!upstreamBase,
+      hasUpstreamApiKey: !!upstreamApiKey,
+    });
     return res.status(500).json({ 
       error: 'Proxy configuration error',
       details: 'QDRANT_UPSTREAM_URL and QDRANT_API_KEY must be set in Vercel environment variables'
@@ -21,27 +42,39 @@ export default async function handler(req, res) {
   const baseUrl = upstreamBase.endsWith('/') ? upstreamBase.slice(0, -1) : upstreamBase;
   
   // Extract the path from the catch-all route
-  // For /api/qdrant/collections, req.query.path will be ['collections']
-  // For /api/qdrant/collections/test, req.query.path will be ['collections', 'test']
-  // Note: req.query may also contain query params, so we need to extract just the path array
+  // In Vercel, for api/qdrant/[...path].js:
+  // - /api/qdrant/collections -> req.query.path = ['collections']
+  // - /api/qdrant/collections/users -> req.query.path = ['collections', 'users']
+  // - /qdrant/collections (rewritten to /api/qdrant/collections) -> req.query.path = ['collections']
   const pathSegments = Array.isArray(req.query.path) 
     ? req.query.path 
     : (req.query.path ? [req.query.path] : []);
-  const upstreamPath = '/' + pathSegments.join('/');
   
-  // Remove leading /qdrant if present (shouldn't happen but just in case)
-  const cleanPath = upstreamPath.replace(/^\/qdrant/, '') || '/';
+  // If pathSegments is empty, try to extract from URL
+  if (pathSegments.length === 0 && req.url) {
+    const urlPath = req.url.split('?')[0];
+    // Remove /api/qdrant prefix if present
+    const cleanUrl = urlPath.replace(/^\/api\/qdrant\/?/, '').replace(/^\/qdrant\/?/, '');
+    if (cleanUrl) {
+      pathSegments.push(...cleanUrl.split('/').filter(Boolean));
+    }
+  }
   
-  // Preserve query string if present (req.url will have it)
+  const upstreamPath = pathSegments.length > 0 ? '/' + pathSegments.join('/') : '/';
+  
+  // Preserve query string if present
   const queryString = req.url.includes('?') ? req.url.substring(req.url.indexOf('?')) : '';
   
   // Build the full upstream URL
-  const upstreamUrl = `${baseUrl}${cleanPath}${queryString}`;
+  const upstreamUrl = `${baseUrl}${upstreamPath}${queryString}`;
 
-  // Log for debugging (only in development)
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[Qdrant Proxy] ${req.method} ${req.url} -> ${upstreamUrl}`);
-  }
+  // Log for debugging (always log in production to help debug)
+  console.log(`[Qdrant Proxy] ${req.method} ${req.url} -> ${upstreamUrl}`, {
+    baseUrl,
+    upstreamPath,
+    pathSegments,
+    queryString,
+  });
 
   try {
     const headers = {

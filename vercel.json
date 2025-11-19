@@ -11,7 +11,7 @@
       "destination": "/api/qdrant/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]
