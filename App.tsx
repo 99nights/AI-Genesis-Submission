@@ -83,8 +83,8 @@ const App: React.FC = () => {
     
     const userHasShop = Boolean(user.roles?.shop || user.shopId);
     
-    setIsLoading(true);
-    
+    // Update data without blocking UI - Dashboard shows loading indicators while data loads
+    // Never set isLoading to true here - Dashboard should always be visible
     if (userHasShop) {
       const summaries = await dataService.getProductSummaries();
       const allBatches = await dataService.getAllBatches();
@@ -96,9 +96,8 @@ const App: React.FC = () => {
       setProductSummaries([]);
       setBatches([]);
       setAllItems([]);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }, []);
 
   // Track if we've initialized to avoid re-initializing
@@ -120,9 +119,10 @@ const App: React.FC = () => {
     }
     
     const init = async () => {
-      // Initialize database - this will load data from Qdrant
+      // Initialize database - this will load data from Qdrant into cache
       await dataService.initializeAndSeedDatabase();
-      // Refresh data to populate state
+      // Refresh data to populate state (uses cached data from initialization)
+      // This is fast since it reads from in-memory cache, not Qdrant
       await refreshData(currentUser);
       hasInitializedRef.current = true;
       lastShopIdRef.current = currentShopId;
@@ -146,6 +146,8 @@ const App: React.FC = () => {
 
   const handleAuthSuccess = useCallback((profile: AuthenticatedProfile) => {
     setSession(profile);
+    // Set loading to false immediately so Dashboard can render with loading indicators
+    // Dashboard will handle its own loading states for data
     setIsLoading(false);
     
     const user = profile.user;
@@ -230,7 +232,9 @@ const App: React.FC = () => {
     return <AuthPage onAuthenticated={handleAuthSuccess} />;
   }
 
-  if (!currentUser || (hasShopRole && isLoading)) {
+  // Only show full-page loading if no user is logged in
+  // Once logged in, show Dashboard immediately with loading indicators (like Products page)
+  if (!currentUser) {
     return (
       <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>

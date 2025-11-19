@@ -6,7 +6,7 @@
 
 import { activeShopId } from '../core';
 import { fetchAllPoints } from '../queries';
-import { getCanonicalProductsForShop } from './products';
+import { getCanonicalProductsForShopDirect } from './products';
 import { db, clearAllCaches } from './helpers';
 import type { Product, Batch, StockItem, SaleTransaction, MarketplaceListing } from '../../../types';
 
@@ -37,8 +37,13 @@ export const loadDataFromQdrant = async (): Promise<void> => {
 
   console.log(`[DataLoader] Loading data for shopId: ${shopIdString}`);
 
-  // Get items first to determine which products we need
-  const itemPoints = await fetchAllPoints('items', shopIdString);
+  // Load shop-specific data in parallel for maximum performance
+  // Only fetch what we need - avoid loading unnecessary collections like sales/marketplace on initial load
+  const [itemPoints, supplierPoints, batchPoints] = await Promise.all([
+    fetchAllPoints('items', shopIdString),
+    fetchAllPoints('suppliers', shopIdString),
+    fetchAllPoints('batches', shopIdString),
+  ]);
   
   // Extract unique productIds from items - we only need products that this shop has
   const productIds = new Set<string>();
@@ -50,17 +55,10 @@ export const loadDataFromQdrant = async (): Promise<void> => {
     }
   }
 
-  // Load only shop-specific data (not all products globally - major performance optimization)
-  const [supplierPoints, batchPoints, salePoints, marketplacePoints] = await Promise.all([
-    fetchAllPoints('suppliers', shopIdString),
-    fetchAllPoints('batches', shopIdString),
-    fetchAllPoints('sales', shopIdString),
-    fetchAllPoints('marketplace', shopIdString),
-  ]);
-
   // Get only products that this shop has (instead of ALL products)
+  // Pass productIds directly to avoid fetching items again in getCanonicalProductsForShop
   const shopProducts = productIds.size > 0 
-    ? await getCanonicalProductsForShop(shopIdString)
+    ? await getCanonicalProductsForShopDirect(productIds)
     : [];
 
   console.log(`[DataLoader] Fetched from Qdrant: ${itemPoints.length} items, ${shopProducts.length} products (shop-specific), ${batchPoints.length} batches`);
@@ -186,29 +184,7 @@ export const loadDataFromQdrant = async (): Promise<void> => {
 
   console.log(`[DataLoader] Loaded ${itemsLoaded} items into cache, skipped ${itemsSkipped} items:`, skippedReasons);
 
-  // Load sales
-  salePoints.forEach(point => {
-    const payload = point.payload as any;
-    if (!payload?.saleId) return;
-    db.salesTransactions.set(payload.saleId, {
-      id: payload.saleId,
-      timestamp: payload.timestamp,
-      items: payload.lineItems || [],
-      totalAmount: payload.totalAmount || 0,
-    });
-  });
-
-  // Load marketplace listings
-  marketplacePoints.forEach(point => {
-    const payload = point.payload as any;
-    if (!payload?.listingId) return;
-    db.marketplaceListings.set(payload.listingId, {
-      id: payload.listingId,
-      productId: payload.productId,
-      productName: payload.productName,
-      quantity: payload.quantity,
-      price: payload.price,
-    });
-  });
+  // Note: Sales and marketplace are NOT loaded during initial load to improve performance
+  // They will be loaded on-demand when needed (Dashboard lazy loads sales, etc.)
 };
 
